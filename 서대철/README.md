@@ -53,4 +53,75 @@
    - 각 삽관-발관 이벤트 쌍에 대해 데이터의 정확성을 검증합니다.
    - 정렬된 데이터는 추가 분석 및 처리를 위해 저장됩니다.
 
+## 사용 함수
+#### 작업 함수 정의
+- 중요개념
+  - 데이터 그룹(group): 전체 데이터프레임은 'subject_id' (환자번호)와 'hadm_id' (입원번호)로 그룹화되어 작업됩니다.
+  - 단일 행(single-row) 데이터: 삽관-발관 조합이 **단 하나** 존재하는 데이터 그룹.
+  - 연속 행(multi-row) 데이터: 삽관-발관 조합이 **2개 이상** 존재하는 데이터 그룹.
 
+##### 데이터 정리 함수
+
+- **`modify_single_row_df(group)`**
+  - 단일 행(single-row) 데이터에만 적용됩니다.
+  - 'modify_marker' 열을 추가하고 `None`으로 초기화합니다.
+
+- **`single_row_imputation(group)`**
+  - 단일 행(single-row) 데이터에만 적용됩니다.
+  - 'extubationtime'이 누락된 경우 'deathtime' 또는 'dischtime'을 기반으로 값을 대체합니다. 'ext_stayid', 'ext_itemid', 'ext_weight'도 동일한 행의 'int_stayid', 'int_itemid', 'int_weight' 값으로 대체합니다.
+  - 'modify_marker' 열에 대체 이력이 저장됩니다.
+  
+- **`find_pairs(unique_intubations, unique_extubations)`**
+  - 고유한 삽관(intubation) 시간과 발관(extubation) 시간을 짝지어 주는 함수입니다. 
+  - 조건에 따라 적절한 삽관/발관 시간 쌍을 찾아 리스트로 반환합니다.
+  - 시간 로직에 적합한 extubationtime 값이 없을 경우, 결측치로 처리합니다.
+
+- **`reformat_multi_row_data_to_dataframe(group, pairs, subject_id, hadm_id)`**
+  - 연속 행(multi-row) 데이터에만 적용됩니다.
+  - 'modify_marker' 칼럼을 추가하는 등 단일 행 데이터와 동일한 DataFrame 형태로 변환합니다.
+
+- **`multi_row_formatting(group, subject_id, hadm_id)`**
+  - 연속 행(multi-row) 데이터에만 적용됩니다.
+  - `find_pairs` 함수를 이용해 삽관/발관 이벤트를 시간 로직에 맞게 재구성합니다. 
+  - `reformat_multi_row_data_to_dataframe` 함수를 이용해 재정렬된 데이터를 DataFrame으로 변환합니다. 
+
+##### 결측치 처리 함수
+
+- **`impute_non_final_rows(group_df)`**
+  - 데이터프레임 내의 마지막 행을 제외한 모든 행에 대해 'extubationtime' 결측치를 다음 행의 'intubationtime'으로 대체합니다.
+  - 관련된 다른 열들 (stay_id, itemid, weight)도 함께 업데이트합니다.
+
+- **`impute_final_row(group_df)`**
+  - 데이터프레임의 마지막 행에 대해 'extubationtime' 결측치를 'deathtime' 또는 'dischtime'으로 대체합니다. 관련된 다른 열들(stay_id, itemid, weight)도 함께 업데이트합니다.
+
+- **`multi_row_imputation(group_df)`**
+  - 다중 행 데이터에 대한 결측치 처리를 수행합니다. `impute_non_final_rows`와 `impute_final_row` 함수를 순차적으로 적용하여 전처리를 진행합니다.
+
+#### 기타 유틸리티 함수
+
+- **`convert_to_datetime(group)`**
+  - 주어진 데이터프레임의 'extubationtime', 'deathtime', 'dischtime' 열을 datetime 형식으로 변환합니다. 변환에 실패한 경우 NaT로 처리합니다.
+
+- **`combine_dfs_from_lists(singlerow_data_list, multirow_data_list)`**
+  - 단일 행 및 다중 행 데이터 리스트를 결합하여 하나의 데이터프레임으로 변환한 후, 'subject_id', 'hadm_id', 'intubationtime'을 기준으로 정렬합니다.
+
+- **`count_null_extubationtimes(df_list)`**
+  - 시간 순서가 재정렬된 데이터 중에서 'extubationtime'의 결측치를 카운트하는 함수입니다. 다양한 유형의 결측치를 분류하여 카운트합니다.
+
+- **`validate_timediff(df_group)`**
+  - intubationtime과 extubationtime의 시간차가 타당한지 검증합니다.
+  - 만약 intubationtime보다 extubationtime이 더 앞선다면, intubationtime을 admittime(입원시각)으로 대체 가능한지 검증합니다. 
+  - admittime으로 대체가능한 경우 대체하고, 대체 불가능한 경우(admittime도 extubationtime보다 앞설 경우) 오류를 마킹하고 넘어갑니다.
+
+- **`get_report(df, original_shape)`**
+  - 데이터 전처리 결과를 요약해주는 함수입니다.
+
+#### 재삽관 시간 계산 함수
+
+- **`get_reintubationtime(df)`**
+  - 'reintubationtime' 열을 추가하고, 'subject_id'와 'hadm_id'를 기준으로 그룹화하여 각 그룹 내에서 다음 행의 'intubationtime'과 현재 행의 'extubationtime'의 시간 차이를 계산합니다.
+
+#### 메인 함수
+
+- **`process_data(df)`**
+  - 전체 데이터 처리 프로세스를 관리하는 메인 함수입니다. 위에 정의된 여러 함수를 호출하여 데이터를 전처리합니다.
