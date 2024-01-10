@@ -111,10 +111,11 @@
 - **`validate_timediff(df_group)`**
   - intubationtime과 extubationtime의 시간차가 타당한지 검증합니다.
   - 만약 intubationtime보다 extubationtime이 더 앞선다면, intubationtime을 admittime(입원시각)으로 대체 가능한지 검증합니다. 
-  - admittime으로 대체가능한 경우 대체하고, 대체 불가능한 경우(admittime도 extubationtime보다 앞설 경우) 오류를 마킹하고 넘어갑니다.
+  - admittime으로 대체가능한 경우 대체하고, 대체 불가능한 경우(admittime도 extubationtime보다 뒤에 발생할 경우) 오류를 마킹하고 넘어갑니다.
 
 - **`get_report(df, original_shape)`**
   - 데이터 전처리 결과를 요약해주는 함수입니다.
+  - Reintubation 이벤트를 로그 빈도 분포로 시각화합니다.
 
 #### 재삽관 시간 계산 함수
 
