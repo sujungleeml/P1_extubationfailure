@@ -65,11 +65,6 @@
 - **`modify_single_row_df(group)`**
   - 단일 행(single-row) 데이터에만 적용됩니다.
   - 'modify_marker' 열을 추가하고 `None`으로 초기화합니다.
-
-- **`single_row_imputation(group)`**
-  - 단일 행(single-row) 데이터에만 적용됩니다.
-  - 'extubationtime'이 누락된 경우 'deathtime' 또는 'dischtime'을 기반으로 값을 대체합니다. 'ext_stayid', 'ext_itemid', 'ext_weight'도 동일한 행의 'int_stayid', 'int_itemid', 'int_weight' 값으로 대체합니다.
-  - 'modify_marker' 열에 대체 이력이 저장됩니다.
   
 - **`find_pairs(unique_intubations, unique_extubations)`**
   - 고유한 삽관(intubation) 시간과 발관(extubation) 시간을 짝지어 주는 함수입니다. 
@@ -86,6 +81,11 @@
   - `reformat_multi_row_data_to_dataframe` 함수를 이용해 재정렬된 데이터를 DataFrame으로 변환합니다. 
 
 ##### 결측치 처리 함수
+
+- **`single_row_imputation(group)`**
+  - 단일 행(single-row) 데이터에만 적용됩니다.
+  - 'extubationtime'이 누락된 경우 'deathtime' 또는 'dischtime'을 기반으로 값을 대체합니다. 'ext_stayid', 'ext_itemid', 'ext_weight'도 동일한 행의 'int_stayid', 'int_itemid', 'int_weight' 값으로 대체합니다.
+  - 'modify_marker' 열에 대체 이력이 저장됩니다.
 
 - **`impute_non_final_rows(group_df)`**
   - 데이터프레임 내의 마지막 행을 제외한 모든 행에 대해 'extubationtime' 결측치를 다음 행의 'intubationtime'으로 대체합니다.
