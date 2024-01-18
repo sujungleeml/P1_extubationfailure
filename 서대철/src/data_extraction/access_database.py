@@ -2,17 +2,19 @@ import json
 import psycopg2
 import pandas as pd
 import logging
+import os
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
 
 def load_config(file_path):
-    """Load configuration from a JSON file."""
+    """config.json 파일 로드"""
     with open(file_path, 'r') as config_file:
         return json.load(config_file)
 
+
 def connect_to_database(config):
-    """Establish a connection to the database."""
+    """DB 연결"""
     try:
         conn = psycopg2.connect(**config)
         conn.autocommit = True
@@ -21,8 +23,9 @@ def connect_to_database(config):
         logging.error(f"Connection failed due to: {e}")
         return None
 
+
 def retrieve_data(conn, queries):
-    """Retrieve data based on provided SQL queries."""
+    """SQL 쿼리로 테이블 추출 ()"""
     if conn is None:
         logging.error("No active database connection.")
         return None
@@ -45,62 +48,48 @@ def retrieve_data(conn, queries):
     finally:
         curs.close()
 
+
 def disconnect_database(conn):
-    """Close the database connection."""
+    """DB 연결 해제"""
     if conn:
         conn.close()
         logging.info('Database connection closed.')
 
+
 def main(config_file):
-    # Load config
+    # config 로드
     config = load_config(config_file)
     database_config = config['DATABASE_CONFIG']
     tables_query = config['TABLES_QUERY']
 
-    # Connect to the database
-    conn = connect_to_database(database_config)
-
-    # Retrieve data
-    dataframes = retrieve_data(conn, tables_query)
-
-    # Disconnect from the database
-    disconnect_database(conn)
-
-    # Return the dataframes
-    return dataframes
-
-if __name__ == "__main__":
-    config_file_path = 'path/to/config.json'  # Update this with the actual path to your config.json file
-    df_dict = main(config_file_path)
-    # Here you can handle the returned dataframes as needed
-
-def main(config_file):
-    # Load config
-    config = load_config(config_file)
-    database_config = config['DATABASE_CONFIG']
-    tables_query = config['TABLES_QUERY']
-
-    # Dynamically construct the queries for intubation_all and extubation_all
+    # intubation_all, extubation_all 쿼리 생성
     intubation_query = f"SELECT * FROM mimiciv_icu.procedureevents WHERE itemid IN ({config['INTUBATION_ITEM_IDS']});"
     extubation_query = f"SELECT * FROM mimiciv_icu.procedureevents WHERE itemid IN ({config['EXTUBATION_ITEM_IDS']});"
 
-    # Add these queries to tables_query
+    # tables_query에 intubation_all, extubation_all 쿼리 추가
     tables_query['intubation_all'] = intubation_query
     tables_query['extubation_all'] = extubation_query
 
-    # Connect to the database
+    # DB 연결
     conn = connect_to_database(database_config)
 
-    # Retrieve data
+    # 데이터 추출
     dataframes = retrieve_data(conn, tables_query)
 
-    # Disconnect from the database
+    # DB 연결 해제
     disconnect_database(conn)
 
-    # Return the dataframes
     return dataframes
 
+
 if __name__ == "__main__":
-    config_file_path = '../config.json'  # Update this with the actual path to your config.json file
+    # 현재 디렉토리
+    current_dir = os.path.dirname(__file__)
+
+    # config.json file 디렉토리
+    config_file_path = os.path.abspath(os.path.join(current_dir, '..', '..', 'config.json'))
+
+    # main 함수 실행
     df_dict = main(config_file_path)
-    # Here you can handle the returned dataframes as needed
+    # 필요한 작업이 더 있다면 하단에 추가 ...
+    

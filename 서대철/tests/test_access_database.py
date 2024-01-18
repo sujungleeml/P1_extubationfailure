@@ -2,7 +2,7 @@ import sys
 import os
 import unittest
 
-# Adjust the path to include the /src directory
+# access_database.py directory
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'data_extraction')))
 
 from access_database import main, load_config
@@ -31,8 +31,5 @@ class TestDatabaseAccess(unittest.TestCase):
         patients_df = dataframes['patients']
         self.assertFalse(patients_df.empty, "Patients dataframe is empty")
 
-        # Add similar tests for other tables as required
-
-# Boilerplate code to run the tests
 if __name__ == '__main__':
     unittest.main()
