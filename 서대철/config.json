@@ -1,0 +1,19 @@
+{
+    "DATABASE_CONFIG": {
+        "database_name": "mimic4",
+        "user": "postgres",
+        "password": "1234",
+        "host": "localhost",
+        "port": 5432
+    },
+    "INTUBATION_ITEM_IDS": "224385",
+    "EXTUBATION_ITEM_IDS": "225468, 225477, 227194",
+    "TABLES_QUERY": {
+        "pg_tables": "SELECT * FROM PG_TABLES;",
+        "patients": "SELECT * FROM mimiciv_hosp.patients;",
+        "admissions": "SELECT * FROM mimiciv_hosp.admissions;",
+        "transfers": "SELECT * FROM mimiciv_hosp.transfers;",
+        "icustays": "SELECT * FROM mimiciv_icu.icustays;",
+        "d_items": "SELECT * FROM mimiciv_icu.d_items;"
+    }
+}
