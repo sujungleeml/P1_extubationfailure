@@ -1,6 +1,6 @@
 {
     "DATABASE_CONFIG": {
-        "database_name": "mimic4",
+        "database": "mimic4",
         "user": "postgres",
         "password": "1234",
         "host": "localhost",

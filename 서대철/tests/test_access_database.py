@@ -3,7 +3,7 @@ import os
 import unittest
 
 # Adjust the path to include the /src directory
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'data_extraction')))
 
 from access_database import main, load_config
 
