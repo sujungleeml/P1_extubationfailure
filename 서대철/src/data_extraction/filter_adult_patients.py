@@ -1,29 +1,19 @@
 from dfply import *
 
 def filter_adult_patients(patients):
-    """
-    Filter adult patients from the given DataFrame.
+    """전체 환자 데이터프레임에서 성인 환자만 추출"""
 
-    Parameters:
-    patients (DataFrame): The DataFrame containing patient data.
+    adults_pat = patients >> filter_by(X.anchor_age >= 18)
 
-    Returns:
-    DataFrame: A DataFrame with adult patients only.
-    """
-    return patients >> filter_by(X.anchor_age >= 18)
+    print(f"Number of adult patients: {len(adults_pat)}")
+
+    return adults_pat
 
 
 def merge_patient_admissions(adults, admissions):
-    """
-    Merge adult patient data with admissions data.
+    """성인 환자 데이터와 입원 데이터 결합"""
 
-    Parameters:
-    adults (DataFrame): DataFrame of adult patients.
-    admissions (DataFrame): DataFrame of admissions.
-
-    Returns:
-    DataFrame: Merged DataFrame of adult patients and admissions.
-    """
     adults_hadm = adults >> left_join(admissions, by = "subject_id") \
         >> select("subject_id", "gender", "anchor_age", "hadm_id", "admittime", "dischtime", "deathtime")
+    
     return adults_hadm >> mask(adults_hadm.hadm_id.notnull())
