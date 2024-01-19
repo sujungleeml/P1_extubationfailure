@@ -5,26 +5,26 @@ from src.data_extraction.filter_adult_patients import filter_adult_patients, mer
 from src.data_extraction.filter_ventilation_events import process_ventilation_data
 
 def main():
-    # Load configuration and retrieve data
+    # DB 접속 후 데이터 메모리로 저장
     config_file_path = 'path/to/config.json'
     dataframes = access_database_main(config_file_path)
 
-    # Extract relevant DataFrames from the retrieved data
+    # 데이터프레임 변환
     patients = dataframes['patients']
     admissions = dataframes['admissions']
     intubation_all = dataframes['intubation_all']
     extubation_all = dataframes['extubation_all']
 
-    # Process the data
-    # Filter and merge adult patient data
+    # 데이터 처리
+    # 성인환자 데이터 필터링
     adults_pat = filter_adult_patients(patients)
     adults_hadm = merge_patient_admissions(adults_pat, admissions)
 
-    # Process intubation and extubation data
+    # 삽관/발관 데이터 필터링 및 처리
     intubation_data = process_ventilation_data(intubation_all, 'intubationtime', 'int_itemid', 'intubation')
     extubation_data = process_ventilation_data(extubation_all, 'extubationtime', 'ext_itemid', 'extubation')
 
-    # Save the processed data to CSV files
+    # 데이터 저장
     output_dir = 'path/to/output_directory'
     adults_hadm.to_csv(os.path.join(output_dir, 'adults_hadm.csv'), index=False)
     intubation_data.to_csv(os.path.join(output_dir, 'intubation_data.csv'), index=False)
