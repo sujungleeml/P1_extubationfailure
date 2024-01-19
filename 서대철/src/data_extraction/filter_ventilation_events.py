@@ -1,43 +1,30 @@
-from dfply import *
 import pandas as pd
+from dfply import *
 
-def process_intubation_data(intubation_all):
+def process_ventilation_data(data, time_col_name, item_col_name, event_type):
     """
-    Process intubation data.
+    삽관/발관 데이터를 처리하는 함수.
 
     Parameters:
-    intubation_all (DataFrame): DataFrame containing intubation event data.
-
-    Returns:
-    DataFrame: Processed intubation data.
+    data (DataFrame): ventilation event dataframe.
+    time_col_name (str): ventilation time 칼럼명 ('intubationtime' vs 'extubationtime').
+    item_col_name (str): item ID 칼럼명 ('int_itemid' vs 'ext_itemid').
+    event_type (str): 삽관/발관을 설정해주는 파라미터 ('intubation' vs 'extubation').
     """
-    intubation1 = intubation_all >> select("subject_id", "hadm_id", "stay_id", "starttime", "itemid", "patientweight")
-    intubation1.rename(columns={'starttime':'intubationtime'}, inplace=True)
-    intubation1['intubationtime'] = pd.to_datetime(intubation1['intubationtime'])
-    return intubation1
+    processed_data = data >> select("subject_id", "hadm_id", "stay_id", "starttime", "itemid", "patientweight")
+    processed_data.rename(columns={'starttime': time_col_name}, inplace=True)
+    processed_data[time_col_name] = pd.to_datetime(processed_data[time_col_name])
 
-
-def process_extubation_data(extubation_all):
-    """
-    Process extubation data.
-
-    Parameters:
-    extubation_all (DataFrame): DataFrame containing extubation event data.
-
-    Returns:
-    DataFrame: Processed extubation data.
-    """
-    extubation1 = extubation_all >> select("subject_id", "hadm_id", "stay_id", "starttime", "itemid", "patientweight")
-    extubation1.rename(columns={'starttime':'extubationtime'}, inplace=True)
-    extubation1['extubationtime'] = pd.to_datetime(extubation1['extubationtime'])
-    
-    def label_extubation(row):
+    # Extubation code에 따라 라벨링 해주는 함수
+    def label_extubation_type(row):
         if row['itemid'] == 225477:
             return 'Unplanned Extubation (non-patient initiated)'
         elif row['itemid'] == 225468:
             return 'Unplanned Extubation (patient-initiated)'
         else:
             return 'Planned Extubation'
-    
-    extubation1['extubationcause'] = extubation1.apply(lambda row: label_extubation(row), axis=1)
-    return extubation1
+
+    if event_type == 'extubation':
+        processed_data['extubationcause'] = processed_data.apply(label_extubation_type, axis=1)
+
+    return processed_data

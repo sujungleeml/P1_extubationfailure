@@ -8,7 +8,7 @@ from pandas.testing import assert_frame_equal
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from filter_adult_patients import filter_adult_patients, merge_patient_admissions
-from filter_ventilation_events import process_intubation_data, process_extubation_data
+from filter_ventilation_events import process_ventilation_data
 
 class TestFilteringFunctions(unittest.TestCase):
 
@@ -40,13 +40,22 @@ class TestFilteringFunctions(unittest.TestCase):
         merged_data = merge_patient_admissions(self.mock_patients, self.mock_admissions)
         self.assertEqual(len(merged_data), len(self.mock_patients))  # Length check
 
-    def test_process_intubation_data(self):
-        processed_data = process_intubation_data(self.mock_intubation_all)
-        # Perform assertions
+    def test_process_ventilation_data_intubation(self):
+        # Process intubation data
+        processed_data = process_ventilation_data(
+            self.mock_intubation_data, 'intubationtime', 'int_itemid', 'intubation'
+        )
+        # Assertions to verify intubation data processing
+        self.assertIn('intubationtime', processed_data.columns, "Intubation time column is missing")
+        self.assertIsInstance(processed_data['intubationtime'].iloc[0], pd.Timestamp, "Intubation time is not a datetime object")
+        # Additional relevant checks
 
-    def test_process_extubation_data(self):
-        processed_data = process_extubation_data(self.mock_extubation_all)
-        # Perform assertions
+    def test_process_ventilation_data_extubation(self):
+        # Process extubation data
+        processed_data = process_ventilation_data(
+            self.mock_extubation_data, 'extubationtime', 'ext_itemid', 'extubation'
+        )
+        # Assertions to verify extubation data processing
 
 if __name__ == '__main__':
     unittest.main()
