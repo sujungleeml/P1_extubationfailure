@@ -80,6 +80,7 @@ def join_ventilation_and_rename(intubation1, extubation1):
 
     return intubation_extubation
 
+
 def join_admissions(intubation_extubation, admissions):
     """삽관발관(intubation_extubation) 데이터를 입원정보(admissions) 데이터와 결합 후 필요한 칼럼만을 추출."""
 
@@ -88,4 +89,26 @@ def join_admissions(intubation_extubation, admissions):
             >> select("subject_id", "hadm_id", "int_stayid", "admittime", "intubationtime", "int_itemid", 
                       "int_weight", "ext_stayid", "extubationtime", "ext_itemid", 'ext_weight', 
                       "extubationcause", "dischtime", "deathtime"))
+
+
+def report_filtering_stats(label, original_df, filtered_df, time_diff):
+    """
+    filter_close_events 함수를 이용한 필터링 작업(중복치 및 근접치 제거) 후 제거된 데이터의 비율을 확인합니다.
+
+    :param label:  ventilation 유형을 정의(e.g., 'intubation', 'extubation').
+    :param original_df: 필터링 전 dataframe
+    :param filtered_df: 필터링 후 dataframe
+    :param time_diff: 근접치를 정의하기 위해 사용한 time_diff 파라미터(분) 값
+    """
+
+    original_count = len(original_df)
+    filtered_count = len(filtered_df)
+    deleted_count = original_count - filtered_count
+    deletion_ratio = deleted_count / original_count * 100 if original_count > 0 else 0
+
+    print("----------------------------------------------------------------------")
+    print(f"{label} 중복치 및 근접치 통계")
+    print(f"근접한 행 과의 거리가 {time_diff}분 이내 일때")
+
+    print(f"{label} 중복 행 개수 : {deleted_count} 행 / {original_count} 행 ({deletion_ratio:.2f} %)")
 

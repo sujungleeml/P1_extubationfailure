@@ -1,16 +1,11 @@
-import json
 import psycopg2
 import pandas as pd
 import logging
 import os
+from ..utils import utils
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
-
-def load_config(file_path):
-    """config.json 파일 로드"""
-    with open(file_path, 'r') as config_file:
-        return json.load(config_file)
 
 
 def connect_to_database(config):
@@ -58,7 +53,7 @@ def disconnect_database(conn):
 
 def main(config_file):
     # config 로드
-    config = load_config(config_file)
+    config = utils.load_config(config_file)
     database_config = config['DATABASE_CONFIG']
     tables_query = config['TABLES_QUERY']
 
