@@ -2,7 +2,6 @@ import psycopg2
 import pandas as pd
 import logging
 import os
-from ..utils import utils
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -11,12 +10,31 @@ logging.basicConfig(level=logging.INFO)
 def connect_to_database(config):
     """DB 연결"""
     try:
+        logging.info('CONNECTING TO DATABASE...')
         conn = psycopg2.connect(**config)
         conn.autocommit = True
         return conn
     except Exception as e:
         logging.error(f"Connection failed due to: {e}")
         return None
+
+
+def print_config_info(database_config, tables_query):
+    print("--------- Database Configuration ---------")
+
+    # 파라미터 로그
+
+    print("Database Name:", database_config['database'])
+    print("User:", database_config['user'])
+    print("Password:", "*" * len(database_config['password'])) 
+    print("Host:", database_config['host'])
+    print("Port:", database_config['port'])
+    print()
+
+    print("--------- SQL Queries for Required Tables ---------")
+    for table_name, query in tables_query.items():
+        print(f"{table_name}: {query}")
+    print()
 
 
 def retrieve_data(conn, queries):
@@ -48,12 +66,10 @@ def disconnect_database(conn):
     """DB 연결 해제"""
     if conn:
         conn.close()
-        logging.info('Database connection closed.')
+        logging.info('DATABASE CONNCETION CLOSED.')
 
 
-def main(config_file):
-    # config 로드
-    config = utils.load_config(config_file)
+def main(config):
     database_config = config['DATABASE_CONFIG']
     tables_query = config['TABLES_QUERY']
 
@@ -64,6 +80,9 @@ def main(config_file):
     # tables_query에 intubation_all, extubation_all 쿼리 추가
     tables_query['intubation_all'] = intubation_query
     tables_query['extubation_all'] = extubation_query
+
+    # DB 정보 출력
+    print_config_info(database_config, tables_query)
 
     # DB 연결
     conn = connect_to_database(database_config)

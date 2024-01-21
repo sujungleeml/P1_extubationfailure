@@ -5,7 +5,7 @@ def filter_adult_patients(patients):
 
     adults_pat = patients >> filter_by(X.anchor_age >= 18)
 
-    print(f"Number of adult patients: {len(adults_pat)}")
+    print(f"Number of adult patients retrieved: {len(adults_pat.subject_id.unique())}")
 
     return adults_pat
 

@@ -4,13 +4,15 @@ import pandas as pd
 from src.data_extraction.access_database import main as access_database_main
 import src.data_extraction.filter_adult_patients as fap
 import src.data_extraction.filter_ventilation_events as fve
-from src.utils.save_data import save_filtered_data
+from src.utils import utils
 
 
 def main(output_dir= './outputs', outputs='all'):
     # DB 접속 후 데이터 메모리로 저장
     config_file_path = './config.json'
-    dataframes = access_database_main(config_file_path)
+    config = utils.load_config(config_file_path)
+
+    dataframes = access_database_main(config)
 
     # 데이터프레임 변환
     patients = dataframes['patients']
@@ -46,7 +48,7 @@ def main(output_dir= './outputs', outputs='all'):
     # 데이터 저장
     if not os.path.exists(output_dir):   # output 디렉토리가 없을 경우 생성
         os.makedirs(output_dir)
-    save_filtered_data(adults_icu, intubation_extubation, output_dir, outputs)
+    utils.save_filtered_data(adults_icu, intubation_extubation, output_dir, outputs)
 
     # 중복치/근접치 제거 리포트 출력
     fve.report_filtering_stats('intubation', intubation_all, intubation_data, time_diff)
