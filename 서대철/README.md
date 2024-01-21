@@ -1,27 +1,40 @@
-# 01_extract_db.ipynb 코드 설명
+# 1) 데이터 추출 스크립트 사용 설명 (data_extraction.py)
 
-`01_extract_db.ipynb` 코드는 데이터베이스에서 테이블을 가져와, 성인 환자의 중환자실(ICU) 기록을 필터링하고, 삽관 및 발관 이벤트를 추출하는 과정을 다룹니다.
+## 설명
+이 스크립트는 MIMIC-IV 데이터베이스에서 환자 정보, 입원 정보, 응급병동 이동 정보 및 삽관/발관 데이터를 추출하여 결합합니다.
 
-## 과정 요약
+## 요구 사항
+- Python 3.x
+- 필요한 Python 라이브러리: pandas, dfply 등
+- 설정 파일 (`config.json`)에 데이터베이스 접속 정보 필요
 
-1. **데이터베이스 접근 및 테이블 추출**
-   - 코드는 먼저 데이터베이스에 접근하여 필요한 테이블들을 가져옵니다. 이를 위해 데이터베이스 이름, 사용자 이름, 비밀번호 등의 정보가 필요합니다.
+## 사용법
+터미널에서 다음과 같이 스크립트를 실행할 수 있습니다:
 
-2. **성인 환자 필터링 및 ICU 기록 추출**
-   - 가져온 데이터 중에서, 18세 이상의 성인 환자에 대한 기록을 필터링합니다. 이후 이들 환자의 중환자실(icu_stay) 체류 기록을 추출합니다.
+```bash
+python data_extraction.py --outputs [출력 타입]
+```
 
-3. **삽관 및 발관 이벤트 필터링**
-   - 삽관(삽관) 및 발관(발관) 이벤트를 필터링하여 추출합니다. 이는 특정 아이템 ID를 기준으로 수행됩니다.
+여기서 `[출력 타입]`은 `all`, `patients`, `ventilations` 중 하나를 지정할 수 있으며, 각각 다른 데이터 세트를 출력합니다.
+- `all`: 응급환자 테이블, 삽관/발관 테이블 모두 저장
+- `patients`: 응급환자 테이블만 저장
+- `ventilations`: 삽관/발관 테이블만 저장
 
-4. **중복 값 제거**
-   - 추출된 데이터에서 중복된 값을 제거합니다. 여기서 중복값이란 삽관 (또는 발관) 이벤트의 발생 시각이 연속된 이벤트와 동일하거나, 1시간 이내에 발생한 경우를 의미합니다.  
+예시:
+```bash
+python data_extraction.py --outputs patients
+```
 
-5. **데이터 내보내기**
-   - 최종적으로 정리된 데이터는 분석 및 추가 처리를 위해 내보내집니다. 이 데이터는 주로 삽관 및 발관 이벤트와 성인 중환자실 기록을 포함합니다.
-    - 1. 성인 ICU 환자 데이터 ('adults_icu2.csv')
-    - 2. 삽관/발관 이벤트 데이터 ('intubation_extubation.csv')
-    - 3. (검증 데이터) 중복값 필터링 후 groupby 된 intubation 데이터 ('intubation_filtered_by_hadm_id_sorted.csv') 
-    - 4. (검증 데이터) 중복값 필터링 후 groupby 된 extubation 데이터 ('extubation_filtered_by_hadm_id_sorted.csv') 
+## 주요 기능
+- `src/data_extraction`에 포함된 모듈을 사용하여 DB 접속, 데이터 추출/정제합니다.
+  - `access_database.py`: DB 접속 
+  - `filter_adult_patients.py`: 성인 환자의 응급병동 입원 정보 필터링
+  - `filter_ventilation_events.py`: 삽관/발관 관련(ventilation) 데이터 필터링
+
+## 설정 파일
+`config.json` 파일에는 데이터베이스 접속 정보 및 기타 설정이 포함되어 있어야 합니다.
+- 주의: `config.json` 파일에는 DB 접속 시 필요한 비밀번호 등 민감 정보가 포함되어 있으니 Github에 push할 경우 주의를 요함.
+
 
 
 # subjectlist_alignment.ipynb 코드 설명
