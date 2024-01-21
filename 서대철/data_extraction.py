@@ -1,8 +1,10 @@
 import os
+import argparse
 import pandas as pd
 from src.data_extraction.access_database import main as access_database_main
 import src.data_extraction.filter_adult_patients as fap
 from src.data_extraction.filter_ventilation_events import process_ventilation_data
+from src.utils.save_data import save_filtered_data
 
 def main(outputs='all'):
     # DB 접속 후 데이터 메모리로 저장
@@ -31,19 +33,12 @@ def main(outputs='all'):
 
     # 데이터 저장
     output_dir = './outputs'
+    save_filtered_data(adults_icu, intubation_data, extubation_data, output_dir, outputs)
 
-    # 데이터 저장
-    if outputs == 'all':
-        adults_icu.to_csv(os.path.join(output_dir, 'adults_icu.csv'), index=False)
-        intubation_data.to_csv(os.path.join(output_dir, 'intubation_data.csv'), index=False)
-        extubation_data.to_csv(os.path.join(output_dir, 'extubation_data.csv'), index=False)
-    elif outputs == 'patients':
-        adults_icu.to_csv(os.path.join(output_dir, 'adults_icu.csv'), index=False)
-    elif outputs == 'ventilations':
-        intubation_data.to_csv(os.path.join(output_dir, 'intubation_data.csv'), index=False)
-        extubation_data.to_csv(os.path.join(output_dir, 'extubation_data.csv'), index=False)   
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run data extraction with specified parameters.')
+    parser.add_argument('--outputs', type=str, default='All', help='Specify the outputs to generate: All, patients, or ventilations')
 
-    print("Data extraction and processing complete. Files saved.")
+    args = parser.parse_args()
 
-if __name__ == "__main__":
-    main()
+    main(outputs=args.outputs)
