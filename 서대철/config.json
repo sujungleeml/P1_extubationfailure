@@ -15,5 +15,6 @@
         "transfers": "SELECT * FROM mimiciv_hosp.transfers;",
         "icustays": "SELECT * FROM mimiciv_icu.icustays;",
         "d_items": "SELECT * FROM mimiciv_icu.d_items;"
-    }
+    },
+    "TIME_DIFF_DUP": 30
 }

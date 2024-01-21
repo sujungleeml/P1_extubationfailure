@@ -35,7 +35,7 @@ def main(output_dir= './outputs', outputs='all'):
     extubation_data = fve.filter_and_label_ventilation_data(extubation_all, 'extubationtime', 'extubation')
 
     # 근접행 제거: time_diff(분) 이내
-    time_diff = 0
+    time_diff = config["TIME_DIFF_DUP"]
     intubation_data = fve.filter_close_events(intubation_data, 'intubationtime', ['subject_id', 'hadm_id'], time_diff=time_diff)
     extubation_data = fve.filter_close_events(extubation_data, 'extubationtime', ['subject_id', 'hadm_id'], time_diff=time_diff)
 
@@ -53,7 +53,7 @@ def main(output_dir= './outputs', outputs='all'):
     # 중복치/근접치 제거 리포트 출력
     fve.report_filtering_stats('intubation', intubation_all, intubation_data, time_diff)
     fve.report_filtering_stats('extubation', extubation_all, extubation_data, time_diff)
-
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run data extraction with specified parameters.')

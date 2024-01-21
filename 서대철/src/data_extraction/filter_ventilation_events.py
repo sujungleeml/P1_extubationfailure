@@ -108,7 +108,7 @@ def report_filtering_stats(label, original_df, filtered_df, time_diff):
 
     print("----------------------------------------------------------------------")
     print(f"{label} 중복치 및 근접치 통계")
-    print(f"근접한 행 과의 거리가 {time_diff}분 이내 일때")
+    print(f"근접한 행 과의 거리가 {time_diff}분 이내인 값을 중복행으로 정의")
 
-    print(f"{label} 중복 행 개수 : {deleted_count} 행 / {original_count} 행 ({deletion_ratio:.2f} %)")
+    print(f"제거된 {label} 중복 행 개수 : {deleted_count} 행 / {original_count} 행 ({deletion_ratio:.2f} %)")
 
