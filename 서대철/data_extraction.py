@@ -6,7 +6,7 @@ from src.data_extraction.filter_ventilation_events import process_ventilation_da
 
 def main():
     # DB 접속 후 데이터 메모리로 저장
-    config_file_path = 'path/to/config.json'
+    config_file_path = './config.json'
     dataframes = access_database_main(config_file_path)
 
     # 데이터프레임 변환
@@ -25,7 +25,7 @@ def main():
     extubation_data = process_ventilation_data(extubation_all, 'extubationtime', 'ext_itemid', 'extubation')
 
     # 데이터 저장
-    output_dir = 'path/to/output_directory'
+    output_dir = './outputs'
     adults_hadm.to_csv(os.path.join(output_dir, 'adults_hadm.csv'), index=False)
     intubation_data.to_csv(os.path.join(output_dir, 'intubation_data.csv'), index=False)
     extubation_data.to_csv(os.path.join(output_dir, 'extubation_data.csv'), index=False)
