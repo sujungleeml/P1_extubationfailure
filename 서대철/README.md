@@ -1,14 +1,24 @@
-# 1) 데이터 추출 스크립트 사용 설명 (data_extraction.py)
+## Workflow
+- 1. DB에서 데이터 추출하기 (data_extraction.py)
+- 2. 환자 정보 정렬하기 (subjectlist_alignment.py)  (to be updated)
+  - intubationtime, extubationtime 페어링
+  - 결측치/이상치 처리
+  - reintubationtime 계산
+  - extubation failure 군 / extubation non-failure 군 정리
+- 3. 변수 추출 (feature_extraction.py) (to be updated)
 
-## 설명
+
+## 1) 데이터 추출 스크립트 사용 설명 (data_extraction.py)
+
+### 설명
 이 스크립트는 MIMIC-IV 데이터베이스에서 환자 정보, 입원 정보, 응급병동 이동 정보 및 삽관/발관 데이터를 추출하여 결합합니다.
 
-## 요구 사항
+### 요구 사항
 - Python 3.x
 - 필요한 Python 라이브러리: pandas, dfply 등
 - 설정 파일 (`config.json`)에 데이터베이스 접속 정보 필요
 
-## 사용법
+### 사용법
 터미널에서 다음과 같이 스크립트를 실행할 수 있습니다:
 
 ```bash
@@ -25,23 +35,23 @@ python data_extraction.py --output_dir `[데이터 저장할 폴더]` --outputs 
 python data_extraction.py --output_dir ./custom_output_folder --outputs patients
 ```
 
-## 주요 기능
+### 주요 기능
 - `src/data_extraction`에 포함된 모듈을 사용하여 DB 접속, 데이터 추출/정제합니다.
   - `access_database.py`: DB 접속 
   - `filter_adult_patients.py`: 성인 환자의 응급병동 입원 정보 필터링
   - `filter_ventilation_events.py`: 삽관/발관 관련(ventilation) 데이터 필터링
 
-## 설정 파일
+### 설정 파일
 `config.json` 파일에는 데이터베이스 접속 정보 및 기타 설정이 포함되어 있어야 합니다.
 - 주의: `config.json` 파일에는 DB 접속 시 필요한 비밀번호 등 민감 정보가 포함되어 있으니 Github에 push할 경우 주의를 요함.
 
 
 
-# subjectlist_alignment.ipynb 코드 설명
+## subjectlist_alignment.ipynb 코드 설명 (참고: old version / not modularized)
 
 `subjectlist_alignment.ipynb` 코드는 개별 환자 데이터를 전처리하고, 삽관 및 발관 이벤트의 적절한 짝을 찾는 과정을 다룹니다.
 
-## 과정 요약
+### 과정 요약
 
 1. **개별 환자 데이터 전처리**
    - 개별 환자 데이터를 기반으로, hadm_id(입원 ID) 별로 데이터를 그룹화합니다.
@@ -66,7 +76,7 @@ python data_extraction.py --output_dir ./custom_output_folder --outputs patients
    - 각 삽관-발관 이벤트 쌍에 대해 데이터의 정확성을 검증합니다.
    - 정렬된 데이터는 추가 분석 및 처리를 위해 저장됩니다.
 
-## 사용 함수
+### 사용 함수
 ##### 작업 함수 정의
 - **중요 개념**
   - **데이터 그룹(group)**: 데이터는 'subject_id' (환자 번호)와 'hadm_id' (입원 번호)를 기준으로 그룹화되어 처리됩니다.
