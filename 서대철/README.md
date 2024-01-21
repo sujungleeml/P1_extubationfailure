@@ -12,17 +12,17 @@
 터미널에서 다음과 같이 스크립트를 실행할 수 있습니다:
 
 ```bash
-python data_extraction.py --outputs [출력 타입]
+python data_extraction.py --output_dir `[데이터 저장할 폴더]` --outputs `[저장될 데이터]`
 ```
 
-여기서 `[출력 타입]`은 `all`, `patients`, `ventilations` 중 하나를 지정할 수 있으며, 각각 다른 데이터 세트를 출력합니다.
+여기서 `[저장될 데이터]`은 `all`, `patients`, `ventilations` 중 하나를 지정할 수 있으며, 각각 다른 데이터 세트를 출력합니다.
 - `all`: 응급환자 테이블, 삽관/발관 테이블 모두 저장
 - `patients`: 응급환자 테이블만 저장
 - `ventilations`: 삽관/발관 테이블만 저장
 
 예시:
 ```bash
-python data_extraction.py --outputs patients
+python data_extraction.py --output_dir ./custom_output_folder --outputs patients
 ```
 
 ## 주요 기능

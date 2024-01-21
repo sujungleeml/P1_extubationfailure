@@ -6,7 +6,7 @@ import src.data_extraction.filter_adult_patients as fap
 import src.data_extraction.filter_ventilation_events as fve
 from src.utils.save_data import save_filtered_data
 
-def main(outputs='all'):
+def main(output_dir= './outputs', outputs='all'):
     # DB 접속 후 데이터 메모리로 저장
     config_file_path = './config.json'
     dataframes = access_database_main(config_file_path)
@@ -42,14 +42,16 @@ def main(outputs='all'):
     intubation_extubation = fve.join_admissions(intubation_extubation, admissions)
 
     # 데이터 저장
-    output_dir = './outputs'
+    if not os.path.exists(output_dir):   # output 디렉토리가 없을 경우 생성
+        os.makedirs(output_dir)
     save_filtered_data(adults_icu, intubation_extubation, output_dir, outputs)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run data extraction with specified parameters.')
-    parser.add_argument('--outputs', type=str, default='All', help='Specify the outputs to generate: All, patients, or ventilations')
+    parser.add_argument('--output_dir', type=str, default='./outputs', help='Directory where outputs will be saved')  # 저장될 폴더
+    parser.add_argument('--outputs', type=str, default='all', help='Specify the outputs to generate: all, patients, or ventilations')   # 저장할 데이터
 
     args = parser.parse_args()
 
-    main(outputs=args.outputs)
+    main(output_dir=args.output_dir, outputs=args.outputs)
