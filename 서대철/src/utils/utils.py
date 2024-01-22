@@ -7,6 +7,17 @@ def load_config(file_path):
         return json.load(config_file)
 
 
+def create_log(code, index):
+    """
+    Dict 형태의 로그 저장하는 함수:
+    code: 로그의 종류 (예: admittime_replacement, deathtime_replacement, dischtime_replacement, ...)
+    index: 행 고유번호
+    """
+    log = {code: index}
+
+    return log
+
+
 def save_filtered_data(adults_icu, intubation_extubation, output_dir, outputs):
     try:
         if outputs == 'all':
