@@ -63,3 +63,31 @@ def impute_first_intubation(group):
     
     return group, log_list
 
+
+def process_intubation_data(grouped_df):
+    modified_groups = []   # For storing final data
+    group_logs = []   # For storing logs
+
+    for group in grouped_df:
+        modified_group, log_list = impute_first_intubation(group)
+        modified_groups.append(modified_group)
+
+        if len(log_list) > 0:
+            group_logs.append(log_list)
+
+    # Recreate the DataFrame with the modifications
+    modified_df = pd.concat(modified_groups)
+
+    return modified_df, group_logs
+
+
+if __name__ == "__main__":
+    # Load data
+    intubation_extubation = pd.read_csv('path_to_your_file.csv')  # Replace with your data loading logic
+    grouped_df = intubation_extubation.groupby(['subject_id', 'hadm_id'])
+
+    modified_df, logs = process_intubation_data(grouped_df)
+
+    # Optionally, print or do something with modified_df and logs
+    print(modified_df)
+    # You can also do something with logs if needed
