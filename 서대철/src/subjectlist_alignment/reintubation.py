@@ -18,9 +18,9 @@ def get_reintubationtime(patient_df):
     # DataFrame을 'intubationtime' 으로 정렬
     patient_df = patient_df.sort_values(by=['intubationtime'])
 
-    # 1째 행과 마지막행을 제외한 행의 reintubation 값 계산
+    # 마지막행을 제외한 행의 reintubation 값 계산
     if len(patient_df) > 2:
-        for i in range(1, len(patient_df) - 1):
+        for i in range(0, len(patient_df) - 1):
             current_idx = patient_df.index[i]
             next_idx = patient_df.index[i + 1]
 
