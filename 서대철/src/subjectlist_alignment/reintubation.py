@@ -1,35 +1,40 @@
 import pandas as pd
 
-def create_reintubation_column(patient_df):
-    """reintubationtime 값이 들어갈 칼럼을 생성 후 0 (time delta)으로 초기화 해줍니다."""
+def create_reintubation_column(group, ignore_exist=False):
+    """reintubationtime 값이 들어갈 칼럼을 생성 후 0.0 (float)으로 초기화 해줍니다."""
 
-    # reintubationtime 칼럼 존재유무 확인
-    if 'reintubationtime' not in patient_df.columns:
-        
-        # reintubationtime' 칼럼 생성 후 0으로 초기화
-        patient_df['reintubationtime'] = pd.Timedelta(seconds=0)
+    if ignore_exist == False:
+        # reintubationtime 칼럼 존재유무 확인
+        if 'reintubationtime' not in group.columns:
+            
+            # reintubationtime' 칼럼 생성 후 0으로 초기화
+            group['reintubationtime'] = 0.0
+        else:
+            print('reintubationtime column already exists.')
+    
+    elif ignore_exist == True:
+        # reintubationtime 칼럼 존재유무와 무관하게 칼럼 초기화
+        group['reintubationtime'] == 0.0
 
-    return patient_df
+    return group
 
 
-def get_reintubationtime(patient_df):
-    """정렬된 개별 환자의 데이터에 대하여 reintubationtime을 구합니다."""
+def get_reintubationtime(group):
+    # DataFrame을 'intubationtime', 'extubationtime' 우선으로 정렬 (null 값은 뒤로 보내기)
+    group = group.sort_values(by=['intubationtime', 'extubationtime'], ascending=[True, True], na_position='last')
 
-    # DataFrame을 'intubationtime' 으로 정렬
-    patient_df = patient_df.sort_values(by=['intubationtime'])
+    # `intcount`가 2 이상인 경우에만 계산
+    if len(group) > 1: 
+        # 마지막 행을 제외한 모든 행을 반복
+        for i in range(len(group) - 1):
+            current_row = group.iloc[i]
+            next_row = group.iloc[i + 1]
 
-    # 마지막행을 제외한 행의 reintubation 값 계산
-    if len(patient_df) > 2:
-        for i in range(0, len(patient_df) - 1):
-            current_idx = patient_df.index[i]
-            next_idx = patient_df.index[i + 1]
+            # 다음 행의 `intubationtime`에서 현재 행의 `extubationtime`을 뺀다
+            group.at[current_row.name, 'reintubationtime'] = (next_row['intubationtime'] - current_row['extubationtime']).total_seconds() / 3600  # 시간 단위로 변환
 
-            # 'reintubationtime' 계산
-            patient_df.at[current_idx, 'reintubationtime'] = patient_df.at[next_idx, 'intubationtime'] - patient_df.at[current_idx, 'extubationtime']
+    return group
 
-    reintubation_patient_df = patient_df.reset_index(drop=True)
-
-    return reintubation_patient_df
 
 
 if __name__ == "__main__":
@@ -39,7 +44,7 @@ if __name__ == "__main__":
 
     df_list = []
     for _, patient_df in grouped_df:
-        patient_df = create_reintubation_column(patient_df)   # reintubationtime 칼럼 초기화
+        patient_df = create_reintubation_column(patient_df, ignore_exist=False)   # reintubationtime 칼럼 초기화
         patient_df = get_reintubationtime(patient_df)    
         df_list.append(patient_df)
     
