@@ -25,7 +25,7 @@
 python data_extraction.py --output_dir `[데이터 저장할 폴더]` --outputs `[저장될 데이터]`
 ```
 
-여기서 `[저장될 데이터]`은 `all`, `patients`, `ventilations` 중 하나를 지정할 수 있으며, 각각 다른 데이터 세트를 출력합니다.
+여기서 `[저장될 데이터]`은 `all`, `patients`, `ventilations` 중 하나를 지정할 수 있으며, 각각 다른 데이터 세트를 출력합니다. 데이터 저장 함수는 utils 모듈에서 불러옵니다. 
 - `all`: 응급환자 테이블, 삽관/발관 테이블 모두 저장
 - `patients`: 응급환자 테이블만 저장
 - `ventilations`: 삽관/발관 테이블만 저장
@@ -36,7 +36,7 @@ python data_extraction.py --output_dir ./custom_output_folder --outputs patients
 ```
 
 ### 주요 기능
-- `src/data_extraction`에 포함된 모듈을 사용하여 DB 접속, 데이터 추출/정제합니다.
+- `src/data_extraction`에 포함된 모듈을 사용하여 DB 접속, 데이터 추출/정제합니다 ([data_extraction 모듈 문서 읽기](./src/data_extraction/README.md)).
   - `access_database.py`: DB 접속 
   - `filter_adult_patients.py`: 성인 환자의 응급병동 입원 정보 필터링
   - `filter_ventilation_events.py`: 삽관/발관 관련(ventilation) 데이터 필터링

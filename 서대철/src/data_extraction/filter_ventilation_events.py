@@ -65,10 +65,10 @@ def filter_close_events(df, time_col, group_cols, time_diff=0):
     return df_sorted.groupby(group_cols, group_keys=False).apply(filter_rows).drop(columns=['time_diff'])
 
 
-def join_ventilation_and_rename(intubation1, extubation1):
+def join_ventilation_and_rename(intubation, extubation):
     """intubation, extubation 데이터 결합 후 칼럼명 정리해주는 함수."""
 
-    intubation_extubation = intubation1 >> left_join(extubation1, by=("subject_id", "hadm_id"))
+    intubation_extubation = intubation >> left_join(extubation, by=("subject_id", "hadm_id"))
     intubation_extubation.rename(columns={
         'stay_id_x': 'int_stayid', 
         'itemid_x': 'int_itemid', 
