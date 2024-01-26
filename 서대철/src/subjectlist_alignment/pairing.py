@@ -104,6 +104,12 @@ def integrate_skipped_times_into_pairs(pairs, skipped_int_times, skipped_ext_tim
                     formatted_pairs[i] = (int_time, skipped_ext)
                     break
 
+    # intubationtime과 extubationtime이 동일한데, 다른 짝이 없는 경우
+    if not formatted_pairs and skipped_int_times and skipped_ext_times:
+        # 동일한 값이지만 하나의 페어로 묶어줌 (추후 검증 코드에서 제거)
+        for int_time, ext_time in zip(skipped_int_times, skipped_ext_times):
+            formatted_pairs.append((int_time, ext_time))
+
     # datetime 객체를 문자열로 다시 변환
     formatted_pairs = [(int_time.strftime('%Y-%m-%d %H:%M:%S') if isinstance(int_time, datetime) else int_time,
                         ext_time.strftime('%Y-%m-%d %H:%M:%S') if isinstance(ext_time, datetime) else ext_time)
