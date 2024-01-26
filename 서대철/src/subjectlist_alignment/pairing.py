@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import pandas as pd
 
 # 정렬 알고리즘 v4 (intubationtime == extubationtime 케이스 고려)
 def primary_pairing(unique_intubations, unique_extubations):
@@ -7,9 +7,9 @@ def primary_pairing(unique_intubations, unique_extubations):
     고유한 intubationtime, extubationtime 리스트를 받아 1차적으로 페어링 수행. intubationtime, extubationtime 중복값 발생 시 다음 함수로 넘김
     """
 
-    # 문자열을 datetime 객체로 변환
-    unique_intubations = [datetime.strptime(time, '%Y-%m-%d %H:%M:%S') for time in unique_intubations]
-    unique_extubations = [datetime.strptime(time, '%Y-%m-%d %H:%M:%S') for time in unique_extubations]
+    # # 문자열을 datetime 객체로 변환
+    # unique_intubations = [datetime.strptime(time, '%Y-%m-%d %H:%M:%S') for time in unique_intubations]
+    # unique_extubations = [datetime.strptime(time, '%Y-%m-%d %H:%M:%S') for time in unique_extubations]
 
     # 시간 정렬
     unique_intubations.sort()
@@ -180,3 +180,70 @@ def main_pairing(unique_intubations, unique_extubations):
 #             ext_index += 1   # 다음 발관 시간으로 이동
 
 #     return pairs
+
+# 페어링된 데이터의 재구조화
+def reformat_paired_data_to_dataframe(group, pairs, subject_id, hadm_id):
+    """
+    페어링 과정은 시간변수 리스트만 따로 떼서 작업이 이루어진다. 
+    따라서 이 완료된 데이터를 다시 데이터프레임 형태로 변환해줄 필요가 있음.
+    중요: 이때, intubationtime/extubationtime과 관련된 다른 칼럼들(stay_id, itemid, weight, 등)을 함께 이동시켜
+    일관성있는 데이터프레임 형태로 가공해줌.
+    """
+
+    if not pairs:
+        print(f"No viable pair found for Subject ID: {subject_id}, HADM ID: {hadm_id}")
+        return pd.DataFrame()  # Pair가 존재하지 않을 때 빈 데이터프레임 리턴
+
+    formatted_data_list = []
+
+    for pair in pairs:
+        intubation_time, extubation_time = pair
+
+        # 칼럼 초기화
+        formatted_row_data = {col: None for col in ['subject_id', 'hadm_id', 'int_stayid',
+                                        'admittime', 'intubationtime', 'int_itemid', 'int_weight',
+                                        'ext_stayid', 'extubationtime', 'ext_itemid', 'ext_weight',
+                                        'extubationcause', 'dischtime', 'deathtime', 'marker']}
+        
+        # intubationtime과 짝지어져 입력될 데이터
+        int_row_cols = ['int_stayid', 'admittime', 'intubationtime', 'int_itemid', 'int_weight', 'dischtime', 'deathtime']
+
+        # extubationtime과 짝지어져 입력될 데이터
+        ext_row_cols = ['ext_stayid', 'admittime', 'extubationtime', 'ext_itemid', 'ext_weight', 'extubationcause', 'dischtime', 'deathtime']
+
+        # 삽관/발관시간 필터링
+        matching_rows = group[(group['intubationtime'] == intubation_time) & 
+                            (group['extubationtime'] == extubation_time)]
+
+        if not matching_rows.empty:
+            # Use data from the matching row if available
+            matching_data = matching_rows.iloc[0].to_dict()
+            formatted_row_data.update(matching_data)
+
+        else:
+            # intubationtime이 있는 경우 데이터 입력
+            if not group[group['intubationtime'] == intubation_time].empty:
+                intubation_data = group[group['intubationtime'] == intubation_time].iloc[0]
+                for col in int_row_cols:
+                    formatted_row_data[col] = intubation_data[col]
+
+            # extubationtime만 있는 경우 데이터 입력
+            if extubation_time is not None and not group[group['extubationtime'] == extubation_time].empty:
+                extubation_data = group[group['extubationtime'] == extubation_time].iloc[0]
+                for col in ext_row_cols:
+                    formatted_row_data[col] = extubation_data[col]
+            else:
+                # extubationtime이 결측치일 경우, admittime, dischtime, deathtime을 제외한 다른 열은 None으로 입력
+                cols_to_exclude = ['admittime', 'dischtime', 'deathtime']
+                for col in [c for c in ext_row_cols if c not in cols_to_exclude]:
+                    formatted_row_data[col] = None
+        
+        # 'subject_id', 'hadm_id' 값 입력
+        formatted_row_data['subject_id'] = subject_id
+        formatted_row_data['hadm_id'] = hadm_id
+
+        formatted_data_list.append(formatted_row_data)
+
+    formatted_dataframe = pd.DataFrame(formatted_data_list)   # 재정렬된 dataframe을 반환
+    return formatted_dataframe
+
