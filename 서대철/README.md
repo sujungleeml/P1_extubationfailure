@@ -3,7 +3,7 @@
 - 2. 환자 정보 정렬하기 (subjectlist_alignment.ipynb)
   - intubationtime, extubationtime 페어링
 
-- 3. reintubationtime 처리 (to be updated)
+- 3. reintubationtime 처리
   - 결측치/이상치 처리 (우선 생략)
   - reintubationtime 계산
   - extubation failure 군 / extubation non-failure 군 정리 (to be updated...)
