@@ -44,6 +44,7 @@ def to_datetime(df, col_names):
         if column in df.columns:
             try:
                 df[column] = pd.to_datetime(df[column])
+                print(f"Converted {column} to datetime.")
             except Exception as e:
                 print(f"Error converting column {column}: {e}")
                 
@@ -51,3 +52,5 @@ def to_datetime(df, col_names):
             print(f"Column {column} not found in DataFrame")
 
     return df
+
+
