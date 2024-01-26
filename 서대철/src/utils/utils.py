@@ -1,3 +1,4 @@
+import pandas as pd
 import json
 import os
 
@@ -34,3 +35,19 @@ def save_filtered_data(adults_icu, intubation_extubation, output_dir, outputs):
         print("Data extraction and processing complete. Files saved.")
     except Exception as e:
         print(f"An error occurred while saving the data: {e}")
+
+
+def to_datetime(df, col_names):
+    """ 데이터프레임의 Object 칼럼을 Datetime 으로 변환해주는 함수"""
+
+    for column in col_names:
+        if column in df.columns:
+            try:
+                df[column] = pd.to_datetime(df[column])
+            except Exception as e:
+                print(f"Error converting column {column}: {e}")
+                
+        else:
+            print(f"Column {column} not found in DataFrame")
+
+    return df
