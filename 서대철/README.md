@@ -31,7 +31,7 @@ python data_extraction.py --output_dir `[데이터 저장할 폴더]` --outputs 
 
 여기서 `[저장될 데이터]`은 `all`, `patients`, `ventilations` 중 하나를 지정할 수 있으며, 각각 다른 데이터 세트를 출력합니다. 데이터 저장 함수는 utils 모듈에서 불러옵니다. 
 - `all`: 응급병동 입원정보(icu_stay)가 있는 환자 테이블(adults_icu.csv), 삽관/발관 테이블(intubation_extubation.csv) 모두 저장
-- `patients`: 응급환자 테이블만 저장(adults_icu.csv)
+- `patients`: 환자 테이블만 저장(adults_icu.csv)
 - `ventilations`: 삽관/발관 테이블만 저장(intubation_extubation.csv)
 
 예시:
