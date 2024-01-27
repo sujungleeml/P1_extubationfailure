@@ -1,8 +1,17 @@
 import pandas as pd
 
 def create_reintubation_columns(group, ignore_exist=False):
-    """ reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
+    """ mvtime, reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
     reintubation_eventtime는 timestamp 형태로 (nan), reintubationtime는 float 형태로 초기화합니다."""
+
+    # mvtime 칼럼 생성
+    if not ignore_exist:
+        if 'mvtime' not in group.columns:
+            group['mvtime'] = 0.0  # Float 칼럼으로 0.0으로 초기화
+        else:
+            print('mvtime column already exists.')
+    elif ignore_exist:
+        group['mvtime'] = 0.0
 
     # reintubation_eventtime 칼럼 생성
     if ignore_exist == False:
@@ -61,6 +70,25 @@ def sort_ventilation_sequence(group):
             sorted_df = pd.concat([pd.DataFrame([row]), sorted_df]).reset_index(drop=True)
 
     return sorted_df
+
+
+def get_mvtime(group):
+    """
+    현재 행의 intubationtime과 extubationtime의 시간 차이를 구합니다 (분 단위; float).
+    두 값 중 하나라도 null이면, mvtime은 null로 설정됩니다.
+    """
+    for idx, row in group.iterrows():
+        # intubationtime과 extubationtime이 모두 not-null 값인지 확인
+        if pd.notna(row['intubationtime']) and pd.notna(row['extubationtime']):
+            # 시간 차이를 분 단위로 계산합니다.
+            time_diff = (row['extubationtime'] - row['intubationtime']).total_seconds() / 60
+            # 계산된 시간 차이를 mvtime 컬럼에 할당합니다.
+            group.at[idx, 'mvtime'] = time_diff
+        else:
+            # intubationtime 또는 extubationtime 중 하나라도 null인 경우, mvtime을 null로 설정합니다.
+            group.at[idx, 'mvtime'] = None
+
+    return group
 
 
 def carryover_next_intubationtime(group):

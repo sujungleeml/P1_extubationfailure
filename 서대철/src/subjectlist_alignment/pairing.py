@@ -247,3 +247,18 @@ def reformat_paired_data_to_dataframe(group, pairs, subject_id, hadm_id):
     formatted_dataframe = pd.DataFrame(formatted_data_list)   # 재정렬된 dataframe을 반환
     return formatted_dataframe
 
+
+def validate_single_rows(group):
+    """
+    각 행에 대해 intubationtime이 extubationtime보다 늦은 경우를 검사합니다.
+    이러한 시간 불일치가 발견되면 time_mismatch를 True로 설정합니다.
+    """
+    time_mismatch = False
+    for idx, row in group.iterrows():
+        # intubationtime이 extubationtime보다 뒤에 오는지 검사
+        if row['intubationtime'] > row['extubationtime']:
+            # 시간 불일치 발견
+            time_mismatch = True
+            break  # 하나의 불일치가 발견되면 더 이상 검사할 필요가 없습니다.
+
+    return time_mismatch

@@ -24,15 +24,20 @@ def save_filtered_data(adults_icu, intubation_extubation, output_dir, outputs):
         if outputs == 'all':
             if not adults_icu.empty:
                 adults_icu.to_csv(os.path.join(output_dir, 'adults_icu.csv'), index=False)
+                print("Data extraction and processing complete. Files saved.")
             if not intubation_extubation.empty:
                 intubation_extubation.to_csv(os.path.join(output_dir, 'intubation_extubation.csv'), index=False)
+                print("Data extraction and processing complete. Files saved.")
         elif outputs == 'patients' and not adults_icu.empty:
             adults_icu.to_csv(os.path.join(output_dir, 'adults_icu.csv'), index=False)
+            print("Data extraction and processing complete. Files saved.")
         elif outputs == 'ventilations':
             if not intubation_extubation.empty:
-                intubation_extubation.to_csv(os.path.join(output_dir, 'intubation_extubation.csv'), index=False)
-
-        print("Data extraction and processing complete. Files saved.")
+                intubation_extubation.to_csv(os.path.join(output_dir, 'intubation_extubation_raw20240127.csv'), index=False)
+                print("Data extraction and processing complete. Files saved.")
+        else:
+            print('Wrong parameter name.')
+        
     except Exception as e:
         print(f"An error occurred while saving the data: {e}")
 
