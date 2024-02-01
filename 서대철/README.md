@@ -1,16 +1,15 @@
 ## Workflow
-- 1. DB에서 데이터 추출하기 (data_extraction.py)
-- 2. 환자 정보 정렬하기 (subjectlist_alignment.ipynb)
-  - 입원정보(icu_stay)가 있는 환자 정보 추출
-  - intubationtime, extubationtime 페어링
+1. DB에서 데이터 추출하기 (data_extraction.py)
+2. 환자 정보 정렬하기 (subjectlist_alignment.ipynb)
+   - 입원정보(icu_stay)가 있는 환자 정보 추출
+   - intubationtime, extubationtime 페어링
 
-- 3. reintubationtime 처리
-  - 결측치/이상치 처리 (우선 생략)
-  - reintubationtime 계산
-  - extubation failure 군 / extubation non-failure 군 정리 (to be updated...)
+3. reintubationtime 처리
+   - 결측치/이상치 처리 (우선 생략)
+   - reintubationtime 계산
+   - extubation failure 군 / extubation non-failure 군 정리 (to be updated...)
 
-- 3. 변수 추출 (feature_extraction.py) (to be updated)
-
+3. 변수 추출 (feature_extraction.py) (to be updated)
 
 ## 1) 데이터 추출 스크립트 사용 설명 (data_extraction.py)
 

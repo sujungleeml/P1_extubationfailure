@@ -127,8 +127,7 @@ def get_reintubationtime(group):
     return group
 
 
-def get_sequence_num(group):
-    
+
 
 
 # if __name__ == "__main__":
