@@ -1,4 +1,6 @@
 import pandas as pd
+from datetime import timedelta
+
 
 def create_reintubation_columns(group, ignore_exist=False):
     """ mvtime, reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
@@ -144,14 +146,15 @@ def get_reintubationtime(group):
 # # (1분기) single event (no reint) vs multievent (yes reint)
 # from datetime import timedelta
 
-# def get_timediff(n1, n2):
-#     return n1 - n2
 
 # def get_timediff_disch_lastext(last_row):
 #     time_diff = get_timediff(last_row.dischtime, last_row.extubationtime)
 #     return time_diff
 
+# --------------------- 이벤트별로 분류하는 코드 (대규모 수정 필요) --------------------- #
 
+def get_timediff(n1, n2):
+    return n1 - n2
 
 
 def classify_reintubation(group):
@@ -229,8 +232,36 @@ def classify_reintubation(group):
     #     # print(f'subject: {subject_id}, FAILURE.')
     #     pass
 
-    # testing code
-        if (cond_reintubation) & (cond_multi_reint) & (cond_last_reint_before48) & (cond_disch_after_48):
-            return subject_id, hadm_id
     
+    # Initialize a code variable, this will store the classification code
+    classification_code = None
+
+    # Apply conditions and assign codes
+    if cond_singleevent:
+        if cond_disch_before_48:
+            # Condition: Single event and discharged before 48 hours
+            classification_code = 'Code1'
+        elif cond_disch_after_48:
+            # Condition: Single event and discharged after 48 hours
+            classification_code = 'Code2'
+
+    elif cond_reintubation:
+        if cond_single_reint:
+            # Conditions for single reintubation
+            if cond_last_reint_after48:
+                classification_code = 'Code3'
+            elif cond_last_reint_before48:
+                classification_code = 'Code4'
+        elif cond_multi_reint:
+            # Conditions for multiple reintubations
+            if cond_last_reint_after48:
+                classification_code = 'Code5'
+            elif cond_last_reint_before48:
+                classification_code = 'Code6'
+
+    # Assign the classification code to the group
+    # You can either add it as a new column in the group DataFrame or create a separate mapping
+    group['classification_code'] = classification_code
+
+    return group
 
