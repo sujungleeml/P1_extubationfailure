@@ -3,17 +3,17 @@ from datetime import timedelta
 
 
 def create_reintubation_columns(group, ignore_exist=False):
-    """ mvtime, reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
+    """ intext_duration, reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
     reintubation_eventtime는 timestamp 형태로 (nan), reintubationtime는 float 형태로 초기화합니다."""
 
-    # mvtime 칼럼 생성
+    # intext_duration 칼럼 생성
     if not ignore_exist:
-        if 'mvtime' not in group.columns:
-            group['mvtime'] = 0.0  # Float 칼럼으로 0.0으로 초기화
+        if 'intext_duration' not in group.columns:
+            group['intext_duration'] = 0.0  # Float 칼럼으로 0.0으로 초기화
         else:
-            print('mvtime column already exists.')
+            print('intext_duration column already exists.')
     elif ignore_exist:
-        group['mvtime'] = 0.0
+        group['intext_duration'] = 0.0
 
     # reintubation_eventtime 칼럼 생성
     if ignore_exist == False:
@@ -74,21 +74,21 @@ def sort_ventilation_sequence(group):
     return sorted_df
 
 
-def get_mvtime(group):
+def get_intext_duration(group):
     """
     현재 행의 intubationtime과 extubationtime의 시간 차이를 구합니다 (분 단위; float).
-    두 값 중 하나라도 null이면, mvtime은 null로 설정됩니다.
+    두 값 중 하나라도 null이면, intext_duration은 null로 설정됩니다.
     """
     for idx, row in group.iterrows():
         # intubationtime과 extubationtime이 모두 not-null 값인지 확인
         if pd.notna(row['intubationtime']) and pd.notna(row['extubationtime']):
             # 시간 차이를 분 단위로 계산합니다.
             time_diff = (row['extubationtime'] - row['intubationtime']).total_seconds() / 60
-            # 계산된 시간 차이를 mvtime 컬럼에 할당합니다.
-            group.at[idx, 'mvtime'] = time_diff
+            # 계산된 시간 차이를 intext_duration 컬럼에 할당합니다.
+            group.at[idx, 'intext_duration'] = time_diff
         else:
-            # intubationtime 또는 extubationtime 중 하나라도 null인 경우, mvtime을 null로 설정합니다.
-            group.at[idx, 'mvtime'] = None
+            # intubationtime 또는 extubationtime 중 하나라도 null인 경우, intext_duration을 null로 설정합니다.
+            group.at[idx, 'intext_duration'] = None
 
     return group
 
