@@ -1,16 +1,21 @@
-# 01. dataext_db.ipynb
+# `notebook Folder` 
+
+## `1. dataext_db.ipynb`
 * 데이터 베이스 접근 및 성인환자 데이터 필터링 진행 (내용 추가 예정)
 
-# 02. filtering_code.ipynb
+## `2. filtering_code.ipynb`
 * 환자의 intubation, extubation 과정을 순서대로 정렬한 데이터를 사용
 * 중복 이벤트 삭제, replacement, reintubation 세 가지를 처리하는 함수입니다.
 
-# 03. Patient_info.ipynb
-* 환자의 정보를 알기 위해 데이터베이스의 정보들을 전체적으로 한 번씩 훑어보기.
+## `3. Patient_info.ipynb`
+* 환자의 정보를 알기 위해 mimic-iv db를 전체적으로 확인합니다.
+* hosp 21개, icu 9개, derived 4개의 DB를 살펴보고 어떤 형식 및 내용을 가지고 있는지 간단하게 살펴봅니다.
 
-# 04. Patient_info2.ipynb
+## `4. Patient_info2.ipynb`
+
+
 ## 설명
-Patient_info2.ipynb 파일은 다음의 과정을 수행합니다.
+`Patient_info2.ipynb` 파일은 다음의 과정을 수행합니다.
 * 환자의 COPD, Gender, Age, Height, Weight, BP, GCS, SAPs II, OASIS 데이터를 전처리 후, 정렬된 데이터 프레임에 정보를 추가합니다.
 
 ## 과정 요약
