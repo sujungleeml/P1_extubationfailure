@@ -10,10 +10,13 @@ def init_class_columns(group):
     3. disch_to_death: 퇴원 후 사망까지 시간차
     4. class_code: 환자 분류 코드 칼럼
     """
+
+    group['mvtime'] = False
     group['ext_to_death'] = None
     group['ext_to_disch'] = None
     group['disch_to_death'] = None
     group['class_code'] = None
+    group['class'] = None
 
     return group
 
@@ -31,6 +34,16 @@ def get_timediffs_minutes(n1, n2):
     """
     time_diff = (n1 - n2).dt.total_seconds() / 60.0   # 분 단위 환산
     return time_diff
+
+
+def flag_mvtime(group):
+    """
+    intext_duration이 1440분 이내 (<= 24시간)이면 mechanical ventilation (True)으로 분류합니다. 
+    """
+
+    group.loc[group['intext_duration'] <= 1440, 'mvtime'] = True
+
+    return group
 
 
 def get_disch_to_death(group):
@@ -76,12 +89,13 @@ def get_ext_to_disch(group):
 
 def fill_class_columns(group):
     """
-    주어진 그룹에 대해 다음을 계산하여 클래스 컬럼을 채웁니다:
+    주어진 그룹에 대해 다음을 계산하여 클래스 결정에 필요한 컬럼을 채웁니다:
+    - 삽관-발관 시간차이가 24시간 이내일 경우, mechanical ventilation으로 규정 (flag_mvtime).
     - 퇴원 시각과 사망 시각 사이의 차이 (disch_to_death).
     - 각 행에 대한 발관 시각과 사망 시각 사이의 차이 (ext_to_death).
     - 각 행에 대한 발관 시각과 퇴원 시각 사이의 차이 (ext_to_disch).
     """
-
+    group = flag_mvtime(group)
     group = get_disch_to_death(group)
     group = get_ext_to_death(group)
     group = get_ext_to_disch(group)
@@ -89,7 +103,7 @@ def fill_class_columns(group):
     return group
 
 
-def classify_noreintubation(group):
+def classify_noreintubation(group, single_row=True):
     """
     group 데이터 중에서 재삽관이 없는 그룹, 즉 행이 1개인 그룹에 대해 환자군 분류
     """
@@ -111,20 +125,35 @@ def classify_noreintubation(group):
 
     # 분류 로직
     if cond_disch_after_48:
-        class_code = 11
+        class_code = 11   #
     elif cond_disch_before_48:
         if cond_death_after_48:
-            class_code = 121
+            class_code = 121   # 
         elif cond_death_before_48:
             class_code = 122
             if cond_death_before_24:
-                class_code = 1221
+                class_code = 1221   #
             else:
-                class_code = 1222
+                class_code = 1222   #
     else:
         class_code = 9999
+    
+    # multi row case의 최종 발관일 경우, 코드 변환
+    if not single_row:
+        if class_code == 11:
+            class_code = 221
+        elif class_code == 121:
+            class_code = 2221
+        elif class_code == 122:
+            class_code = 2222
+        elif class_code == 1221:
+            class_code = 22221
+        elif class_code == 1222:
+            class_code = 22222
 
-    group['class_code'] = class_code
+    # group['class_code'] = class_code
+    group.loc[group.index[-1], 'class_code'] = class_code
+
     return group
 
 
@@ -146,8 +175,12 @@ def classify_reintubation(group):
             group.at[group.index[i], 'class_code'] = class_code
 
     # 마지막 행의 경우 재삽관 시간이 없는 것이 당연. 퇴원시각, 사망시각으로 추가적인 분류 작업 수행.
-    group.at[group.index[-1], 'class_code'] = 997
-    #예정
+    last_row_group = group.iloc[-1:]  # 최종 행 따로 추출
+    last_row_group = classify_noreintubation(last_row_group, single_row=False)   # 분류 작업 수행
+    group = pd.concat([group.iloc[:-1], last_row_group])   # 데이터 다시 합쳐주기
+
+    # group.at[group.index[-1], 'class_code'] = 997
+    
 
     return group
 
@@ -194,7 +227,12 @@ def classify_other(group):
 
 
 def classify_patients(group):
-    # 분기1: reintubation 여부 확인
+    """
+    유형별로 케이스 'code' 입력해줌
+
+    Code:
+
+    """
     cond_singleevent = len(group) == 1   # reintubation 없는 케이스
     cond_reintubation = len(group) > 1   # reintubation 있는 케이스
 
@@ -205,4 +243,17 @@ def classify_patients(group):
         group = classify_null_case(group)
     group = classify_other(group)
     return group
+
+
+def categorize_code(group, categories):
+    """
+    class_code 기반으로 환자군 분류
+    """
+
+    # 코드에 맞게 환자군 분류
+    for category, codes in categories.items():
+        group.loc[group['class_code'].isin(codes), 'class'] = category
+
+    return group
+
 
