@@ -5,13 +5,16 @@ from datetime import timedelta
 def init_class_columns(group):
     """
     환자 분류를 위해 필요한 칼럼들 생성
-    1. ext_to_death: 최종 발관 후 사망까지 시간차
-    2. ext_to_disch: 최종 발관 후 퇴원까지 시간차
-    3. disch_to_death: 퇴원 후 사망까지 시간차
-    4. class_code: 환자 분류 코드 칼럼
+    1. mvtime: 삽관발관 시간 차에 따라 mvtime True 마킹
+    2. final_event: 최종 행 마킹
+    3. ext_to_death: 최종 발관 후 사망까지 시간차
+    4. ext_to_disch: 최종 발관 후 퇴원까지 시간차
+    5. disch_to_death: 퇴원 후 사망까지 시간차
+    6. class_code: 환자 분류 코드 칼럼
     """
 
     group['mvtime'] = False
+    group['final_event'] = False
     group['ext_to_death'] = None
     group['ext_to_disch'] = None
     group['disch_to_death'] = None
@@ -42,6 +45,16 @@ def flag_mvtime(group):
     """
 
     group.loc[group['intext_duration'] <= 1440, 'mvtime'] = True
+
+    return group
+
+
+def flag_final_event(group):
+    """
+    가장 마지막 행 (재삽관이 없는) 마킹
+    """
+
+    group.loc[group.index[-1], 'final_event'] = True
 
     return group
 
@@ -91,14 +104,17 @@ def fill_class_columns(group):
     """
     주어진 그룹에 대해 다음을 계산하여 클래스 결정에 필요한 컬럼을 채웁니다:
     - 삽관-발관 시간차이가 24시간 이내일 경우, mechanical ventilation으로 규정 (flag_mvtime).
+    - 재삽관이 없는 최종행에 대해 마킹 (flag_final_event).
     - 퇴원 시각과 사망 시각 사이의 차이 (disch_to_death).
     - 각 행에 대한 발관 시각과 사망 시각 사이의 차이 (ext_to_death).
     - 각 행에 대한 발관 시각과 퇴원 시각 사이의 차이 (ext_to_disch).
     """
     group = flag_mvtime(group)
+    group = flag_final_event(group)
     group = get_disch_to_death(group)
     group = get_ext_to_death(group)
     group = get_ext_to_disch(group)
+    
     
     return group
 
