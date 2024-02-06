@@ -11,6 +11,53 @@
 
 3. 변수 추출 (feature_extraction.py) (to be updated)
 
+
+## DATA (현재까지 추가된 칼럼)
+- subject_id: 환자 고유번호 (출처: hosp_patients)
+- hadm_id: 병원 입원 고유번호 (출처: hosp_admissions)
+- int_stayid: 삽관 당시 응급병동 입원 고유번호 (출처: icu_icustays)
+- admittime: 입원시각 (출처: hosp_admissions)
+- intubationtime: 삽관시각 (출처: icu_procedureevents)
+- int_itemid: 삽관 아이템 코드 (itemid: 224385) (출처: icu_procedureevents)
+- int_weight: 삽관 당시 체중 (출처: icu_procedureevents)
+- ext_stayid: 발관 당시 응급병동 입원 고유번호 (출처: icu_icustays) (출처: icu_procedureevents)
+- extubationtime: 발관시각 (출처: icu_procedureevents) (출처: icu_procedureevents)
+- ext_itemid: 발관 아이템 코드 (itemid: 225468, 225477, 227194) (출처: icu_procedureevents)
+- ext_weight: 발관 당시 체중 (출처: icu_procedureevents)
+- extubationcause: 발관 사유 (Planned Extubation, Unplanned Extubation (patient-initiated), Unplanned Extubation (patient-uninitiated)) (출처: icu_procedureevents)
+- dischtime: 퇴원시각 (출처: hosp_admissions)
+- deathtime: 사망시각 (출처: hosp_admissions)
+- marker: 결측값 대체가 이루어진 경우 기록 (예: 퇴원시각으로 대체 시 'dischtime imputation)
+- reint_marker (boolean): 이 환자의 입원기록에서 재삽관 존재 시 True. 
+- intext_duration: 삽관시각과 발관시각의 시간차 (단위: 분)
+- reintubation_eventtime: 다음 재삽관 시간 (없을 경우 NULL)
+- reintubationtime: 발관 후 재삽관까지 걸린 시간 (단위: 분)
+- seq_num: 삽관-발관 이벤트의 시퀀스 순서(1~n)
+- mvtime (boolean): intext_duration이 1440분 이내 (<= 24시간)이면 mechanical ventilation (True)으로 분류 
+- final_event (boolean): 현재 행이 전체 시퀀스의 최종 이벤트일 경우 True. 재삽관이 없는 단일행 데이터도 True. 
+- ext_to_death: 발관 후 사망까지 소요 시간 (주의: 행별로 계산된 데이터임. 최종 발관 행의 ext_to_death만을 참고해야함.)
+- ext_to_disch: 발관 후 퇴원까지 소요 시간 (주의: 행별로 계산된 데이터임. 최종 발관 행의 ext_to_disch만을 참고해야함.)
+- disch_to_death: 사망시각과 퇴원시각의 시간차. 사망 후 퇴원 처리된 케이스 확인필 (단위: 분)
+- class_code: 케이스별로 고유한 13개 코드로 데이터를 분류
+| Class Code | Description | Outcome |
+|---|---|---|
+| 11 | 재삽관 없이 발관후 48시간 넘어 퇴원 | Non-failure |
+| 121 | 재삽관 없이 발관후 48시간 이내 사망 | Non-failure |
+| 1221 | 재삽관 없이 발관후 24시간 이내 사망 | Death |
+| 1222 | 재삽관 없이 발관후 24~48시간 이내 사망 | Death |
+| 211 | 48시간 이내 재삽관 | Failure |
+| 212 | 48시간 너머 재삽관 | Non-failure |
+| 221 | 최종 발관 이후 48시간 넘어 퇴원 | Non-failure |
+| 2221 | 최종 발관 이후 48시간 이내 사망 | Non-failure |
+| 22221 | 최종 발관 이후 24시간 이내 사망 | Death |
+| 22222 | 최종 발관 이후 24~48시간 이내 사망 | Death |
+| 999 | (null case) 현발관-다음발관이 48시간 이내 | Failure |
+| 998 | (null case) 현삽관-다음삽관이 48시간 이내 | Failure |
+| 9999 | (null case) Non-failure 판단 불가 | 제거 |
+
+
+- class: class_code 기반으로 (Extubation) failure, non-failure, death의 3개 라벨로 분류함
+
 ## 1) 데이터 추출 스크립트 사용 설명 (data_extraction.py)
 
 ### 설명
@@ -97,32 +144,5 @@ python data_extraction.py --output_dir ./custom_output_folder --outputs patients
    - 결측값이 어떤 식으로든 대체된 경우, 'marker' 칼럼에 그 내용이 기록됩니다. 
 
 6. **환자군 분류 (extubation failure, non-failure)**
-
-아래 분류 코드를 기준으로 분류. 'class' 칼럼 생성하여 최종 분류.
-
-   11    재삽관 없이 발관후 48시간 넘어 퇴원 | nonfailure
-
-   121   재삽관 없이 발관후 48시간 이내 사망 X | nonfailure
-
-   1221  재삽관 없이 발관후 24시간 이내 사망 | death
-
-   1222  재삽관 없이 발관후 24~48시간 이내 사망 | death
-
-   211   48시간 이내 재삽관 | failure
-
-   212   48시간 너머 재삽관 | nonfailure
-
-   221   최종 발관 이후 48시간 넘어 퇴원 | nonfailure
-
-   2221  최종 발관 이후 48시간 이내 사망 X | nonfailure
-
-   22221 최종 발관 이후 24시간 이내 사망 | death
-
-   22222 최종 발관 이후 24~48시간 이내 사망 | death
-
-   999   (null case)현발관-다음발관이 48시간 이내 | Failure
-
-   998   (null case)현삽관-다음삽관이 48시간 이내 | Failure
-
-   9999  (null case) non-failure 판단 불가 | 제거
+   - 분류 코드(class_code)를 기준으로 3개의 라벨로 분류(class). 상기 `DATA` 항목 참조.
 
