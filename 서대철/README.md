@@ -39,8 +39,9 @@
 - ext_to_disch: 발관 후 퇴원까지 소요 시간 (주의: 행별로 계산된 데이터임. 최종 발관 행의 ext_to_disch만을 참고해야함.)
 - disch_to_death: 사망시각과 퇴원시각의 시간차. 사망 후 퇴원 처리된 케이스 확인필 (단위: 분)
 - class_code: 케이스별로 고유한 13개 코드로 데이터를 분류
+
 | Class Code | Description | Outcome |
-|---|---|---|
+|------------|-------------|---------|
 | 11 | 재삽관 없이 발관후 48시간 넘어 퇴원 | Non-failure |
 | 121 | 재삽관 없이 발관후 48시간 이내 사망 | Non-failure |
 | 1221 | 재삽관 없이 발관후 24시간 이내 사망 | Death |
@@ -53,7 +54,8 @@
 | 22222 | 최종 발관 이후 24~48시간 이내 사망 | Death |
 | 999 | (null case) 현발관-다음발관이 48시간 이내 | Failure |
 | 998 | (null case) 현삽관-다음삽관이 48시간 이내 | Failure |
-| 9999 | (null case) Non-failure 판단 불가 | 제거 |
+| 9999 | (null case) Non-failure 판단 불가 | 제거 (Exclude) |
+
 
 
 - class: class_code 기반으로 (Extubation) failure, non-failure, death의 3개 라벨로 분류함
