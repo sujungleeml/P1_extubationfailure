@@ -33,6 +33,12 @@
 
 이 모듈은 삽관 및 발관 데이터를 처리하고, 라벨링하고 결합하는 데 사용됩니다.
 
+1. intubationtime, extubationtime 테이블 각각 추출
+2. 근접행 제거: 각 테이블 별로 20분 이내에 이벤트가 반복되어 일어나는 행 삭제
+3. intubationtime, extubationtime 테이블 결합, 중복되는 칼럼명 적절히 변환
+4. 입원정보 테이블과 결합
+5. 테이블 저장
+
 #### 함수:
 
 - `filter_and_label_ventilation_data(data, time_col_name, event_type)`: 환기 데이터 (삽관 또는 발관)를 처리합니다. Extubation 테이블의 경우 extubation cause 라벨링을 수행합니다 (planned, unplanned patient-initiated, unplanned non-patient initiated).
