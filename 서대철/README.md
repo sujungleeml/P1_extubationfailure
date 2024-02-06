@@ -4,12 +4,12 @@
    - 입원정보(icu_stay)가 있는 환자 정보 추출
    - intubationtime, extubationtime 페어링
 
-3. reintubationtime 처리
-   - 결측치/이상치 처리 (우선 생략)
+3. reintubationtime 처리 (subjectlist_alignment.ipynb)
+   - 결측치/이상치 처리
    - reintubationtime 계산
    - extubation failure 군 / extubation non-failure 군 분류
 
-3. 변수 추출 (feature_extraction.py) (to be updated)
+3. 변수 추출 (to be updated)
 
 
 ## DATA (현재까지 추가된 칼럼)
@@ -39,6 +39,8 @@
 - ext_to_disch: 발관 후 퇴원까지 소요 시간 (주의: 행별로 계산된 데이터임. 최종 발관 행의 ext_to_disch만을 참고해야함.)
 - disch_to_death: 사망시각과 퇴원시각의 시간차. 사망 후 퇴원 처리된 케이스 확인필 (단위: 분)
 - class_code: 케이스별로 고유한 13개 코드로 데이터를 분류
+- class: class_code 기반으로 (Extubation) failure, non-failure, death의 3개 라벨로 분류함
+
 
 | Class Code | Description | Outcome |
 |------------|-------------|---------|
@@ -52,13 +54,11 @@
 | 2221 | 최종 발관 이후 48시간 이내 사망 | Non-failure |
 | 22221 | 최종 발관 이후 24시간 이내 사망 | Death |
 | 22222 | 최종 발관 이후 24~48시간 이내 사망 | Death |
-| 999 | (null case) 현발관-다음발관이 48시간 이내 | Failure |
 | 998 | (null case) 현삽관-다음삽관이 48시간 이내 | Failure |
+| 999 | (null case) 현발관-다음발관이 48시간 이내 | Failure |
 | 9999 | (null case) Non-failure 판단 불가 | 제거 (Exclude) |
 
 
-
-- class: class_code 기반으로 (Extubation) failure, non-failure, death의 3개 라벨로 분류함
 
 ## 1) 데이터 추출 스크립트 사용 설명 (data_extraction.py)
 
