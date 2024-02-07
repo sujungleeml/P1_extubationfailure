@@ -59,3 +59,37 @@ def to_datetime(df, col_names):
     return df
 
 
+def calculate_adjusted_anchor_age(df):
+    """
+    주어진 데이터프레임에 대해 anchor_age를 입원시점에 맞게 조정한 adj_anchor_age을 계산합니다.
+    
+    이 함수는 'anchor_year'와 'admittime' 컬럼을 사용하여 각 환자의 입원 시점에서의 정확한 연령을 계산합니다.
+    계산된 연령은 'adj_anchor_age' 컬럼에 저장됩니다. ('admittime 칼럼은 timestamp로 변환되어 있어야 합니다.')
+    
+    Parameters:
+    - df: pandas DataFrame, 'anchor_year', 'admittime', 'anchor_age' 컬럼을 포함해야 합니다.
+    
+    Returns:
+    - df: 'adj_anchor_age' 컬럼이 추가된 원본 DataFrame의 복사본입니다. 
+          계산에 사용된 'anchor_date', 'days_diff', 'years_diff'는 제거됩니다.
+    """
+
+    # anchor_date 계산 (앵커 연도의 시작: 1월 1일)
+    df['anchor_date'] = pd.to_datetime(df['anchor_year'], format='%Y')
+    
+    # admittime과 anchor_date 사이의 일수 차이 계산
+    df['days_diff'] = (df['admittime'] - df['anchor_date']).dt.days
+    
+    # 일수 차이를 float 연도로 변환 (윤년 고려해 365.25로 나눔. 더 정확한 나이 표시 가능)
+    df['years_diff'] = df['days_diff'] / 365.25
+    
+    # anchor_age에 연도 차이를 더해 조정된 나이 계산
+    df['adj_anchor_age'] = df['anchor_age'] + df['years_diff']
+    
+    # 조정된 나이를 소수점 둘째 자리까지 반올림
+    df['adj_anchor_age'] = df['adj_anchor_age'].round(2)
+    
+    # 불필요한 컬럼 제거
+    df = df.drop(columns=['anchor_date', 'days_diff', 'years_diff'])
+    
+    return df
