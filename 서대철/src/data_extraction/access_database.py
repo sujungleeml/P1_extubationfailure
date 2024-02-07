@@ -2,6 +2,8 @@ import psycopg2
 import pandas as pd
 import logging
 import os
+from sshtunnel import SSHTunnelForwarder
+
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +19,48 @@ def connect_to_database(config):
     except Exception as e:
         logging.error(f"Connection failed due to: {e}")
         return None
+
+
+def connect_to_database_via_ssh(config, ssh_config):
+    """
+    데이터베이스에 SSH 터널을 통해 연결합니다.
+
+    Parameters:
+    - config: 데이터베이스 연결 정보를 포함한 dict.
+    - ssh_config: SSH 연결 정보를 포함한 dict, ssh_ip, ssh_port, ssh_username, ssh_password, remote_bind_address 포함해야 함.
+
+    Returns:
+    - conn: 데이터베이스 연결 객체. 연결 실패시 None 반환.
+    """
+    try:
+        # SSH 터널 설정
+        tunnel = SSHTunnelForwarder(
+            (ssh_config['ssh_ip'], ssh_config['ssh_port']),
+            ssh_username=ssh_config['ssh_username'],
+            ssh_password=ssh_config['ssh_password'], 
+            remote_bind_address=ssh_config['remote_bind_address']
+        )
+        
+        # SSH 터널 시작
+        tunnel.start()
+        
+        logging.info('SSH TUNNEL ESTABLISHED...')
+
+        # 데이터베이스 연결 파라미터에 SSH 터널 포트 추가
+        db_params = config.copy()
+        db_params['host'] = 'localhost'  # SSH 터널을 통해 로컬호스트로 연결
+        db_params['port'] = tunnel.local_bind_port
+        
+        # 데이터베이스 연결
+        conn = psycopg2.connect(**db_params)
+        conn.autocommit = True
+        logging.info(f"{config['database']} DATABASE CONNECTED VIA SSH.")
+        
+        return conn, tunnel  # 터널 객체도 반환하여 외부에서 종료할 수 있게 함
+
+    except Exception as e:
+        logging.error(f"Connection failed due to: {e}")
+        return None, None
 
 
 def print_config_info(database_config, tables_query):
