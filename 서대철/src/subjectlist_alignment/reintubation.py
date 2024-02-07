@@ -3,8 +3,15 @@ from datetime import timedelta
 
 
 def create_reintubation_columns(group, ignore_exist=False):
-    """ intext_duration, reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
+    """ reint_marker, intext_duration, reintubation_eventtime 및 reintubationtime 칼럼을 생성합니다. 
     reintubation_eventtime는 timestamp 형태로 (nan), reintubationtime는 float 형태로 초기화합니다."""
+
+    # reint_marker 칼럼 생성 및 초기화
+    if not ignore_exist:
+        if 'reint_marker' not in group.columns:
+            group['reint_marker'] = False  # 재삽관 발생 여부를 나타내는 마커, 존재하지 않으면 False로 초기화
+        else:
+            print('reint_marker column already exists.')
 
     # intext_duration 칼럼 생성
     if not ignore_exist:
@@ -110,6 +117,19 @@ def carryover_next_intubationtime(group):
     return group
 
 
+def get_reint_marker(group):
+    """
+    이 함수는 그룹 내의 행이 1개를 초과하는 경우,
+    모든 행의 'reint_marker' 칼럼을 True로 설정합니다.
+    이는 재삽관이 있는 그룹을 표시하는 데 사용됩니다.
+    """
+    
+    if len(group) > 1:
+        group['reint_marker'] = True
+    
+    return group
+
+
 def get_reintubationtime(group):
     """
     'reintubation_eventtime' (다음 intubationtime)과 현재의 'extubationtime'의 시간차를 구합니다 (분 단위; float).
@@ -153,117 +173,5 @@ def get_reintubationtime(group):
 #     time_diff = get_timediff(last_row.dischtime, last_row.extubationtime)
 #     return time_diff
 
-# --------------------- 이벤트별로 분류하는 코드 (대규모 수정 필요) --------------------- #
 
-def get_timediff(n1, n2):
-    return n1 - n2
-
-
-def classify_reintubation(group):
-    subject_id = group.subject_id.unique()
-    hadm_id = group.hadm_id.unique()
-    id = (subject_id, hadm_id)
-
-    # 분기1: reintubation 여부 확인
-    cond_singleevent = (len(group) == 1)   # No: 삽관발관 이벤트가 1개인 경우 (no reintubation) -> 분기 1-1로 이동
-    cond_reintubation = (len(group) > 1)   # Yes: 복수의 삽관발관 이벤트가 있는 경우 (reintubation 존재) -> 분기 1-2로 이동
-
-    # 분기1-1: 퇴원시간 고려 (reintubation 없는 경우)
-    last_row = group.iloc[-1]
-    cond_disch_before_48 = get_timediff(last_row.dischtime, last_row.extubationtime) <= timedelta(hours=48)  # 마지막 삽관발관 이벤트 후 48시간 이내에 퇴원한 경우
-    cond_disch_after_48 = get_timediff(last_row.dischtime, last_row.extubationtime) > timedelta(hours=48)  # 마지막 삽관발관 이벤트 후 48시간이 넘어서 퇴원한 경우
-
-    # 분기1-1-1: 사망시간 고려 (reintubation 없는 경우)
-    last_row = group.iloc[-1]
-    last_extubationtime = last_row.extubationtime
-    last_dischtime = last_row.dischtime
-    last_deathtime = last_row.deathtime
-
-    cond_death_before_48 = get_timediff(last_row.deathtime, last_row.extubationtime) <= timedelta(hours=48)  # 마지막 삽관발관 이벤트 후 48시간 이내에 사망한 경우
-    cond_death_after_48 = (get_timediff(last_row.deathtime, last_row.extubationtime) > timedelta(hours=48)) | (pd.isna(last_row.deathtime))  # 마지막 삽관발관 이벤트 후 48시간이 넘어서 사망한 경우 (+ 사망시각 없는 경우)
-    cond_death = pd.notna(last_row.deathtime)
-
-    # (분기1-1-1-2: 사망시간 24시간 이내 고려)
-    cond_death_before_24 = get_timediff(last_row.deathtime, last_row.extubationtime) <= timedelta(hours=24)  # 마지막 삽관발관 이벤트 후 48시간 이내에 사망한 경우
-    
-    # 분기2: reintubation 횟수 고려
-    cond_single_reint = (len(group) == 2)   # reintubation이 1번 이루어진 경우 (2행) -> 분기 2-1-1로 이동
-    cond_multi_reint = (len(group) > 2)   # reintubation이 여러번 이루어진 경우 (3행 이상) -> 분기 2-2-1로 이동
-
-    ## 분기2-1: 1번의 reintubation 시행한 케이스: 성공(48시간 이후) 실패(48시간 이내)
-    last_reintubationtime = group.iloc[0].reintubationtime  # reintubationtime은 앞의 행에 계산되어 있기 때문에 첫행 가져옴
-    cond_last_reint_after48 = last_reintubationtime > 48   # 성공 (reintubationtime 칼럼은 float이기 때문에 time delta 불필요)
-    cond_last_reint_before48 = last_reintubationtime <= 48   # 실패
-
-    # 분기2-1-2: 1번의 reintubation 시행 성공 후 사망 케이스 고려 (테스트 중)
-    cond_death = not pd.isnull(group.iloc[0].deathtime)    # deathtime이 존재하는지? 사망시간 있으면 true
-    
-    # 조건: 재삽관1회 시행, 48시간 이후 (성공 케이스), 퇴원
-    lastext_to_disch_time_diff = get_timediff(last_dischtime, last_extubationtime)
-    lastext_to_death_time_diff = get_timediff(last_deathtime, last_extubationtime)
-
-    if (cond_reintubation) & (cond_single_reint) & (cond_last_reint_after48) & (lastext_to_disch_time_diff <= timedelta(48)) & (not cond_death):
-        return subject_id, hadm_id
-
-    # 분기2-2: 여러번의 reintubation 시행한 케이스 
-    if cond_reintubation:
-        second_last_row = group.iloc[-2]   # 여러번 중 마지막 재삽관 (중요: 마지막 reintubation은 데이터의 n-1 번째 행임. n 번째 행은 0으로 계산됨)
-        last_reintubationtime = second_last_row.reintubationtime
-        last_extubationtime = group.iloc[-1].extubationtime
-        last_dischtime = group.iloc[-1].dischtime
-        last_deathtime = group.iloc[-1].deathtime
-
-        cond_last_reint_after48 = last_reintubationtime > 48
-        cond_last_reint_before48 = last_reintubationtime <= 48
-
-        # 분기2-2-1: 최종 발관 이후 퇴원 케이스 고려
-        lastext_to_disch_time_diff = get_timediff(last_dischtime, last_extubationtime)
-        lastext_to_death_time_diff = get_timediff(last_deathtime, last_extubationtime)
-        cond_disch_before_48 = lastext_to_disch_time_diff <= timedelta(hours=48)  # 마지막 발관 이벤트 후 48시간 이내에 퇴원한 경우
-        cond_disch_after_48 = lastext_to_disch_time_diff > timedelta(hours=48)  # 마지막 발관 이벤트 후 48시간이 넘어서 퇴원한 경우
-        
-        # 분기2-2-2: 최종 발관 이후 사망 케이스 고려
-        
-        cond_death_before_48 = lastext_to_death_time_diff <= timedelta(hours=48)  # 마지막 발관 이벤트 후 48시간 이내에 사망한 경우
-        cond_death_after_48 = lastext_to_death_time_diff > timedelta(hours=48)  # 마지막 발관 이벤트 후 48시간이 넘어서 사망한 경우
-
-    # testing code
-    # if cond_reintubation & cond_single_reint & cond_reint_success:   # 총 한번의 삽관발관 이벤트 중 1개가 성공
-    #     print(f'subject: {subject_id}, SUCCESS.')
-    # elif cond_reintubation & cond_single_reint & cond_reint_failure: # 총 한번의 삽관발관 이벤트 중 1개가 실패
-    #     # print(f'subject: {subject_id}, FAILURE.')
-    #     pass
-
-    
-    # Initialize a code variable, this will store the classification code
-    classification_code = None
-
-    # Apply conditions and assign codes
-    if cond_singleevent:
-        if cond_disch_before_48:
-            # Condition: Single event and discharged before 48 hours
-            classification_code = 'Code1'
-        elif cond_disch_after_48:
-            # Condition: Single event and discharged after 48 hours
-            classification_code = 'Code2'
-
-    elif cond_reintubation:
-        if cond_single_reint:
-            # Conditions for single reintubation
-            if cond_last_reint_after48:
-                classification_code = 'Code3'
-            elif cond_last_reint_before48:
-                classification_code = 'Code4'
-        elif cond_multi_reint:
-            # Conditions for multiple reintubations
-            if cond_last_reint_after48:
-                classification_code = 'Code5'
-            elif cond_last_reint_before48:
-                classification_code = 'Code6'
-
-    # Assign the classification code to the group
-    # You can either add it as a new column in the group DataFrame or create a separate mapping
-    group['classification_code'] = classification_code
-
-    return group
 
