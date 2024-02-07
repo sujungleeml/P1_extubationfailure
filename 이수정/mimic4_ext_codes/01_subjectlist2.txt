@@ -1,0 +1,3 @@
+data의 subejctlist2.csv 를 보세요
+
+해당 데이터는 MV time 이 24시간 미만인 데이터를 제거한 버전입니다
