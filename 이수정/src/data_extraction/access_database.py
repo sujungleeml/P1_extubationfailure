@@ -110,7 +110,7 @@ def disconnect_database(conn):
     """DB 연결 해제"""
     if conn:
         conn.close()
-        logging.info('DATABASE CONNCETION CLOSED.')
+        logging.info('DATABASE CONNECTION CLOSED.')
 
 
 def main(config):
