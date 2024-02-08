@@ -116,3 +116,33 @@ def get_stayid(df):
     df['stay_id'] = df['stay_id'].astype(int)
     
     return df
+
+
+def mark_stayid_mismatch(df):
+    """
+    삽관 발관 이벤트의 stay_id가 안 맞는 케이스를 마킹함.
+    """
+
+    df['stayid_mismatch'] = df.apply(
+        lambda row: pd.notnull(row['int_stayid']) and pd.notnull(row['ext_stayid']) and row['int_stayid'] != row['ext_stayid'],
+        axis=1
+    )
+    return df
+
+
+def create_stay_id(df):
+    """
+    'ext_stayid' 기준으로 'stay_id' 칼럼 생성. 'ext_stayid'가 NULL일 경우 'int_stayid' 사용
+    """
+
+    df['stay_id'] = df.apply(
+        lambda row: int(row['ext_stayid']) if pd.notnull(row['ext_stayid']) else int(row['int_stayid']),
+        axis=1
+    )
+    
+    # 'stay_id' 칼럼 위치 변경
+    column_order = ['subject_id', 'hadm_id', 'stay_id'] + [col for col in df.columns if col not in ['subject_id', 'hadm_id', 'stay_id']]
+    df = df[column_order]
+    
+    return df
+

@@ -182,12 +182,13 @@ def classify_reintubation(group):
 
     for i in range(len(group) - 1):  # 중간행 (1 ~ n-1) 데이터 처리
     
-        # 현재 행의 'reintubationtime'이 2880분을 (48시간) 초과하는지 확인
-        if group.iloc[i]['reintubationtime'] > 2880:  
-            class_code = 212   # non-failure
-            group.at[group.index[i], 'class_code'] = class_code
-        elif group.iloc[i]['reintubationtime'] <= 2880:
-            class_code = 211   # failure
+        # 현재 행의 'reintubationtime'이 None이 아니고, 2880분을 (48시간) 초과하는지 확인
+        reintubation_time = group.iloc[i]['reintubationtime']
+        if reintubation_time is not None:
+            if reintubation_time > 2880:
+                class_code = 212   # non-failure
+            elif reintubation_time <= 2880:
+                class_code = 211   # failure
             group.at[group.index[i], 'class_code'] = class_code
 
     # 마지막 행의 경우 재삽관 시간이 없는 것이 당연. 퇴원시각, 사망시각으로 추가적인 분류 작업 수행.
