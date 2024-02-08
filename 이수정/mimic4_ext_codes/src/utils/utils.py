@@ -93,3 +93,26 @@ def calculate_adjusted_anchor_age(df):
     df = df.drop(columns=['anchor_date', 'days_diff', 'years_diff'])
     
     return df
+
+
+def get_stayid(df):
+    """
+    'int_stayid'와 'ext_stayid' 컬럼을 기반으로 DataFrame에 'stay_id' 컬럼을 추가하는 함수입니다.
+    
+    'int_stayid'가 null이 아니면 'stay_id'로 사용되며, 그렇지 않으면 'ext_stayid'가 사용됩니다.
+    이 함수는 각 행에 대해 이 두 컬럼 중 적어도 하나는 null이 아니라고 가정합니다.
+    
+    매개변수:
+    - df: 'int_stayid'와 'ext_stayid' 컬럼을 포함하는 pandas DataFrame입니다.
+    
+    반환값:
+    - 'stay_id' 컬럼이 추가된 pandas DataFrame입니다.
+    """
+    df['stay_id'] = df.apply(
+        lambda row: row['int_stayid'] if pd.notnull(row['int_stayid']) else row['ext_stayid'],
+        axis=1
+    )
+    # 'stay_id'를 정수로 변환합니다. Join 작업을 위해 필요합니다.
+    df['stay_id'] = df['stay_id'].astype(int)
+    
+    return df
