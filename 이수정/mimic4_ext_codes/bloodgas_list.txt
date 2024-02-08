@@ -1,0 +1,65 @@
+,itemid,label,fluid,category
+0,50801,Alveolar-arterial Gradient,Blood,Blood Gas
+1,50802,Base Excess,Blood,Blood Gas
+2,50803,"Calculated Bicarbonate, Whole Blood",Blood,Blood Gas
+3,50804,Calculated Total CO2,Blood,Blood Gas
+4,50805,Carboxyhemoglobin,Blood,Blood Gas
+5,50806,"Chloride, Whole Blood",Blood,Blood Gas
+6,50808,Free Calcium,Blood,Blood Gas
+7,50809,Glucose,Blood,Blood Gas
+8,50810,"Hematocrit, Calculated",Blood,Blood Gas
+9,50811,Hemoglobin,Blood,Blood Gas
+10,50812,Intubated,Blood,Blood Gas
+11,50813,Lactate,Blood,Blood Gas
+12,50814,Methemoglobin,Blood,Blood Gas
+13,50815,O2 Flow,Blood,Blood Gas
+14,50816,Oxygen,Blood,Blood Gas
+15,50817,Oxygen Saturation,Blood,Blood Gas
+16,50818,pCO2,Blood,Blood Gas
+17,50819,PEEP,Blood,Blood Gas
+18,50820,pH,Blood,Blood Gas
+19,50821,pO2,Blood,Blood Gas
+20,50822,"Potassium, Whole Blood",Blood,Blood Gas
+21,50823,Required O2,Blood,Blood Gas
+22,50824,"Sodium, Whole Blood",Blood,Blood Gas
+23,50825,Temperature,Blood,Blood Gas
+24,50826,Tidal Volume,Blood,Blood Gas
+25,50827,Ventilation Rate,Blood,Blood Gas
+26,50828,Ventilator,Blood,Blood Gas
+27,50829,Fluid Type,Other Body Fluid,Blood Gas
+28,50830,"pCO2, Body Fluid",Other Body Fluid,Blood Gas
+29,50831,pH,Other Body Fluid,Blood Gas
+30,50832,"pO2, Body Fluid",Other Body Fluid,Blood Gas
+31,50833,Potassium,Other Body Fluid,Blood Gas
+32,50834,"Sodium, Body Fluid",Other Body Fluid,Blood Gas
+1114,52021,Abz,Blood,Blood Gas
+1115,52022,"Albumin, Blood",Blood,Blood Gas
+1116,52023,Assist/Control,Blood,Blood Gas
+1117,52024,"Creatinine, Whole Blood",Blood,Blood Gas
+1118,52025,Delete,Blood,Blood Gas
+1119,52026,Estimated GFR (MDRD equation),Blood,Blood Gas
+1120,52027,"Glucose, Whole Blood",Blood,Blood Gas
+1121,52028,Hematocrit,Blood,Blood Gas
+1122,52029,% Ionized Calcium,Blood,Blood Gas
+1123,52030,Lithium,Blood,Blood Gas
+1124,52031,Osmolality,Blood,Blood Gas
+1125,52032,P50 of Hemoglobin,Blood,Blood Gas
+1126,52033,Specimen Type,Blood,Blood Gas
+1127,52034,Total Calcium,Blood,Blood Gas
+1128,52035,Total Calcium,Blood,Blood Gas
+1129,52036,Voided Specimen,Blood,Blood Gas
+1130,52037,WB tCO2,Blood,Blood Gas
+1131,52038,Base Excess,Fluid,Blood Gas
+1132,52039,Calculated Bicarbonate,Fluid,Blood Gas
+1133,52040,pCO2,Fluid,Blood Gas
+1134,52041,pH,Fluid,Blood Gas
+1135,52042,pO2,Fluid,Blood Gas
+1136,52043,Voided Specimen,Other Body Fluid,Blood Gas
+1137,52044,"Osmolality, Urine",Urine,Blood Gas
+1138,52045,"pH, Urine",Urine,Blood Gas
+1139,52046,"Potassium, Urine",Urine,Blood Gas
+1140,52047,"Sodium, Urine",Urine,Blood Gas
+1518,52434,"Chloride, Whole Blood",Blood,Blood Gas
+1519,52442,Lactate,Blood,Blood Gas
+1520,52452,"Potassium, Whole Blood",Blood,Blood Gas
+1521,52455,"Sodium, Whole Blood",Blood,Blood Gas
