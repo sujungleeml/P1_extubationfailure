@@ -274,3 +274,18 @@ def categorize_code(group, categories):
     return group
 
 
+def create_stay_id(df):
+    """
+    'ext_stayid' 기준으로 'stay_id' 칼럼 생성. 'ext_stayid'가 NULL일 경우 'int_stayid' 사용
+    """
+
+    df['stay_id'] = df.apply(
+        lambda row: int(row['ext_stayid']) if pd.notnull(row['ext_stayid']) else int(row['int_stayid']),
+        axis=1
+    )
+    
+    # 'stay_id' 칼럼 위치 변경
+    column_order = ['subject_id', 'hadm_id', 'stay_id'] + [col for col in df.columns if col not in ['subject_id', 'hadm_id', 'stay_id']]
+    df = df[column_order]
+    
+    return df

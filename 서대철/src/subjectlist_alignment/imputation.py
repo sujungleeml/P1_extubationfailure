@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import time
 import warnings
@@ -52,7 +53,7 @@ def find_approx_single_vent(ventilation_df, row):
     if pd.notnull(row['intubationtime']) and pd.notnull(row['extubationtime']):
         return None  # Indicating that no action is needed for this row
     
-    results = {'original_times': None, 'candidate_times': None}
+    results = {'original_times': None, 'candidate_times': None, 'stay_ids': None}
     
     # 결측 시간에 따라 올바른 stay_id 할당 (int missing -> ext stay id; ext missing -> int stay id 사용)
     stayid = row['ext_stayid'] if pd.isnull(row['intubationtime']) else row['int_stayid']
@@ -78,15 +79,18 @@ def find_approx_single_vent(ventilation_df, row):
         if len(closest_candidates) == 1:
             # 가장 적합한 후보 시간 기록
             results['candidate_times'] = {corrected_time_type: pd.Timestamp(closest_candidates[target_time].values[0])}
+            results['stay_ids'] = closest_candidates['stay_id'].values[0] 
         else:
             # 가장 가까운 후보 시간 모두 기록
             results['candidate_times'] = {corrected_time_type: [pd.Timestamp(time) for time in closest_candidates[target_time].values]}
+            results['stay_ids'] = closest_candidates['stay_id'].values.tolist()
 
     elif len(candidates) == 1:
         # corrected_time_type을 사용하기 전에 정의
         corrected_time_type = "extubationtime" if target_time == "endtime" else "intubationtime"
         # 단일 후보 시간 기록
         results['candidate_times'] = {corrected_time_type: pd.Timestamp(candidates[target_time].values[0])}
+        results['stay_ids'] = candidates['stay_id'].values[0]
     else:
         print("No candidate rows found.")
 
@@ -116,7 +120,7 @@ def find_best_candidate_for_imputation(ventilation_df, row, prev_row=None, next_
             # 여러 starttime이 존재할 경우 그들의 'endtime'을 참조해서 비교
             candidates['time_diff'] = (candidates['endtime'] - row.get('extubationtime', np.inf)).abs()
             best_candidate_idx = candidates['time_diff'].idxmin()
-            results.append(('intubationtime', candidates.loc[best_candidate_idx, 'starttime']))
+            results.append(('intubationtime', candidates.loc[best_candidate_idx, 'starttime'], candidates.loc[best_candidate_idx, 'stay_id']))
             
     elif pd.isnull(row['extubationtime']):
         candidates = ventilation_df[(ventilation_df['stay_id'] == stay_id) &
@@ -126,7 +130,7 @@ def find_best_candidate_for_imputation(ventilation_df, row, prev_row=None, next_
             # 여러 endtime이 존재할 경우 그들의 'starttime'을 참조
             candidates['time_diff'] = (candidates['starttime'] - row.get('intubationtime', -np.inf)).abs()
             best_candidate_idx = candidates['time_diff'].idxmin()
-            results.append(('extubationtime', candidates.loc[best_candidate_idx, 'endtime']))
+            results.append(('extubationtime', candidates.loc[best_candidate_idx, 'endtime'], candidates.loc[best_candidate_idx, 'stay_id']))
 
     return results
 
@@ -152,8 +156,14 @@ def process_ventilation_sequences(ventilation_df, group):
             candidates = find_best_candidate_for_imputation(ventilation_df, row, prev_row, next_row)
             if candidates:
                 # 오리지널 행과 후보군 함께 저장 (비교 위해)
-                imputation_candidates.append({'index': idx, 'current_pair': current_pair, 'candidates': candidates})
-
+                for time_type, time_value, stay_id in candidates:
+                    imputation_candidate = {
+                        'index': idx,
+                        'current_pair': current_pair,
+                        'candidate': (time_type, time_value),
+                        'stay_id': stay_id  # Include stay_id for each candidate
+                    }
+                    imputation_candidates.append(imputation_candidate)
     return imputation_candidates
 
 
@@ -181,7 +191,8 @@ def ventilation_search(ventilation_df, subject_df):
                     'candidates': [{
                         'index': index,
                         'current_pair': single_row_results['original_times'],
-                        'candidates': [(key, val) for key, val in single_row_results['candidate_times'].items()]
+                        'candidates': [(key, val) for key, val in single_row_results['candidate_times'].items()],
+                        'stay_ids': single_row_results['stay_ids']
                     }]
                 })
         
@@ -240,11 +251,20 @@ def impute_candidates(df, single_row_results_list, multirow_candidates_list):
             if index in rows_to_skip:
                 continue
                 
-            for candidate in candidate_info['candidates']:
-                time_type, time_value = candidate
+            # Ensure stay_ids is treated as a list, even if it contains only a single element
+            stay_ids = candidate_info['stay_ids']
+            if not isinstance(stay_ids, list):
+                stay_ids = [stay_ids]  # Convert scalar stay_id to a list for consistent access
+                
+            for i, (time_type, time_value) in enumerate(candidate_info['candidates']):
+                # Ensure indexing into stay_ids list is safe
+                stay_id = stay_ids[i] if i < len(stay_ids) else stay_ids[-1]  # Fallback to last stay_id if out of range
+                
+                stay_id_column = 'int_stayid' if time_type == 'intubationtime' else 'ext_stayid'
                 
                 log_message = f"{time_type} InvasiveVent imputation"
                 df.at[index, time_type] = time_value
+                df.at[index, stay_id_column] = stay_id
                 
                 # 'marker' 칼럼을 로그 메시지로 업데이트합니다.
                 row = df.loc[index].to_dict()
@@ -301,3 +321,21 @@ def impute_null(df):
     print("--- RUNTIME: %.2f seconds ---" % round(time.time() - start_time, 2))
         
     return reintubation_df
+
+
+def mark_transfer(df):
+    # Step 1: Create the 'transfer' column initialized with 'None'
+    df['transfer'] = None
+    
+    # Iterate over each row in the DataFrame to check the condition
+    for index, row in df.iterrows():
+        # Step 2 & 3: Check if both int_stayid and ext_stayid are not NULL and differ
+        if pd.notnull(row['int_stayid']) and pd.notnull(row['ext_stayid']):
+            if row['int_stayid'] != row['ext_stayid']:
+                df.at[index, 'transfer'] = True  # Different stays, mark as True
+            else:
+                df.at[index, 'transfer'] = False  # Same stay, mark as False
+        # Step 5: For cases where either value is NULL, 'transfer' remains None
+        
+    return df
+
