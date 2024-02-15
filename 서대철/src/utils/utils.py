@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import json
 import os
@@ -146,3 +147,24 @@ def create_stay_id(df):
     
     return df
 
+
+def get_charlson_score(df):
+    df['calculated_cci'] = (
+    df['age_score'] +
+    df['myocardial_infarct'] +
+    df['congestive_heart_failure'] +
+    df['peripheral_vascular_disease'] +
+    df['cerebrovascular_disease'] +
+    df['dementia'] +
+    df['chronic_pulmonary_disease'] +
+    df['rheumatic_disease'] +
+    df['peptic_ulcer_disease'] +
+    np.maximum(df['mild_liver_disease'], 3 * df['severe_liver_disease']) +
+    np.maximum(2 * df['diabetes_with_cc'], df['diabetes_without_cc']) +
+    np.maximum(2 * df['malignant_cancer'], 6 * df['metastatic_solid_tumor']) +
+    2 * df['paraplegia'] +
+    2 * df['renal_disease'] +
+    6 * df['aids']
+    )
+
+    return df
