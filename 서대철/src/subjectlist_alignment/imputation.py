@@ -221,8 +221,8 @@ def check_for_multiple_candidates(candidate_list):
     rows_with_multiple_candidates = []
     for entry in candidate_list:
         for candidate_info in entry['candidates']:
-            if len(candidate_info['candidates']) > 1:
-                print(f"Error: Multiple candidates found for row index {candidate_info['index']}. Skipping imputation for this row.")
+            if len(candidate_info['candidates']) > 1:  # More than one candidate found
+                print(f"Multiple candidates found for row index {candidate_info['index']}: {candidate_info['candidates']}")
                 rows_with_multiple_candidates.append(candidate_info['index'])
     return rows_with_multiple_candidates
 
@@ -236,11 +236,13 @@ def impute_candidates(df, single_row_results_list, multirow_candidates_list):
         df['marker'] = np.nan
     
     # single_row_results_list와 multirow_candidates_list에서 다중 후보가 있는 행의 인덱스를 확인하고 가져옵니다. (이들은 스킵할 것)
-    rows_to_skip_single = check_for_multiple_candidates(single_row_results_list)
-    rows_to_skip_multi = check_for_multiple_candidates(multirow_candidates_list)
+    # rows_to_skip_single = check_for_multiple_candidates(single_row_results_list)
+    # rows_to_skip_multi = check_for_multiple_candidates(multirow_candidates_list)
+    multiple_candidates_indexes = check_for_multiple_candidates(single_row_results_list + multirow_candidates_list)
+
     
     # 건너뛸 행의 인덱스를 결합하고 중복을 제거합니다.
-    rows_to_skip = list(set(rows_to_skip_single + rows_to_skip_multi))
+    rows_to_skip = multiple_candidates_indexes
     
     # single_row_results_list 와 multirow_candidates_list 에 대한 로그 메시지를 남깁니다.
     for entry in single_row_results_list + multirow_candidates_list:

@@ -168,3 +168,15 @@ def get_charlson_score(df):
     )
 
     return df
+
+def print_desc_stats(df, column):
+    mean = df[column].mean()
+    median = df[column].median()
+    std = df[column].std()
+    min = df[column].min()
+    max = df[column].max()
+
+    print(f'mean: {mean}')
+    print(f'median: {median}')
+    print(f'std: {std}')
+    print(f'range: {min} - {max}')
