@@ -227,7 +227,53 @@ def check_for_multiple_candidates(candidate_list):
     return rows_with_multiple_candidates
 
 
-def impute_candidates(df, single_row_results_list, multirow_candidates_list):
+# NEW FUNCTION FOR INTUBATION
+
+def find_missing_intubationtime(df, ventilation_df):
+    missing_intubation_times = []
+    
+    # Group by 'hadm_id' and iterate through each group
+    for hadm_id, group in df.groupby('hadm_id'):
+        for idx, row in group.iterrows():
+            if pd.isnull(row['intubationtime']):
+                stay_id = row['stay_id']
+                ventilation_events = ventilation_df[ventilation_df['stay_id'] == stay_id]
+
+                if idx == group.index[0]:  # First row in the group
+                    valid_starttimes = ventilation_events[
+                        (ventilation_events['starttime'] >= row['admittime']) & 
+                        (ventilation_events['starttime'] <= row['extubationtime'])
+                    ]
+                else:  # Not the first row, compare with previous row's extubationtime
+                    prev_row = df.loc[idx - 1]
+                    valid_starttimes = ventilation_events[
+                        (ventilation_events['starttime'] >= prev_row['extubationtime']) & 
+                        (ventilation_events['starttime'] <= row['extubationtime'])
+                    ]
+
+                # If valid starttime values are found, save them along with the index
+                for starttime in valid_starttimes['starttime'].values:
+                    missing_intubation_times.append({'index': idx, 'starttime': starttime})
+
+    return missing_intubation_times
+
+
+def impute_missing_intubationtime(df, missing_intubation_times):
+    for item in missing_intubation_times:
+        idx = item['index']
+        starttime = item['starttime']
+        
+        # Ensure the starttime is converted to a Timestamp if not already
+        if not isinstance(starttime, pd.Timestamp):
+            starttime = pd.to_datetime(starttime)
+        
+        # Impute the missing intubationtime
+        df.at[idx, 'intubationtime'] = starttime
+    
+    return df
+
+
+def impute_candidates(df, single_row_results_list, multirow_candidates_list, ventilation):
     """
     DataFrame에 있는 결측된 intubationtime 또는 extubationtime을 선택된 후보값으로 대체하고,
     'marker' 칼럼에 로그를 남깁니다. 다중 후보가 있는 행은 건너뜁니다.
@@ -272,6 +318,9 @@ def impute_candidates(df, single_row_results_list, multirow_candidates_list):
                 row = df.loc[index].to_dict()
                 row = insert_marker(row, log_message)
                 df.at[index, 'marker'] = row['marker']
+
+    missing_intubation_times = find_missing_intubationtime(df, ventilation)
+    df = impute_missing_intubationtime(df, missing_intubation_times)
 
     return df
 
